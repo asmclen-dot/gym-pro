@@ -6,30 +6,32 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dumbbell, Heart, Combine, PlusCircle, Trash2 } from 'lucide-react';
+import { Dumbbell, Heart, Combine, PlusCircle, Trash2, CheckSquare, Edit } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
-
 const exerciseList = [
-    // Strength - Chest
-    "ضغط البنش (Bench Press)", "ضغط البنش المائل (Incline Bench Press)", "ضغط البنش بالدمبل (Dumbbell Bench Press)", "تفتيح بالدمبل (Dumbbell Flyes)", "غطس (Dips)", "ضغط على الأرض (Push-up)",
-    // Strength - Back
-    "الرفعة الميتة (Deadlift)", "سحب علوي (Pull-up)", "شين أب (Chin-up)", "تجديف بالبار (Barbell Row)", "تجديف بالدمبل (Dumbbell Row)", "سحب أرضي (Seated Cable Row)", "تمرين السوبرمان (Superman)",
-    // Strength - Legs
-    "سكوات (Squat)", "سكوات أمامي (Front Squat)", "ضغط الأرجل (Leg Press)", "اندفاع (Lunge)", "رفعة رومانية مميتة (Romanian Deadlift)", "تجعيد أوتار الركبة (Hamstring Curl)", "تمديد الساق (Leg Extension)", "رفع السمانة (Calf Raise)",
-    // Strength - Shoulders
-    "ضغط الأكتاف (Overhead Press)", "رفع جانبي (Lateral Raise)", "رفع أمامي (Front Raise)", "تجديف عمودي (Upright Row)", "شراغز (Shrugs)",
-    // Strength - Arms
-    "تجعيد العضلة ذات الرأسين بالبار (Barbell Bicep Curl)", "تجعيد العضلة ذات الرأسين بالدمبل (Dumbbell Bicep Curl)", "تجعيد هامر (Hammer Curl)", "ترايسبس بوشดาวน์ (Tricep Pushdown)", "ترايسبس اكستنشن بالدمبل (Dumbbell Tricep Extension)", "ضغط البنش بقبضة ضيقة (Close-Grip Bench Press)",
-    // Strength - Core
-    "تمرين المعدة (Crunch)", "رفع الساق (Leg Raise)", "بلانك (Plank)", "بلانك جانبي (Side Plank)", "تمرين الدراجة الهوائية (Bicycle Crunch)",
+    // Chest
+    "ضغط البنش (Bench Press)", "ضغط البنش المائل (Incline Bench Press)", "ضغط البنش المنحدر (Decline Bench Press)", "ضغط البنش بالدمبل (Dumbbell Bench Press)", "ضغط البنش المائل بالدمبل (Incline Dumbbell Press)", "تفتيح بالدمبل (Dumbbell Flyes)", "تفتيح مائل بالدمبل (Incline Dumbbell Flyes)", "تفتيح بالكابل (Cable Crossover)", "غطس للصدر (Chest Dips)", "ضغط على الأرض (Push-up)", "ضغط على الأرض بقبضة واسعة (Wide-grip Push-up)", "ضغط على الأرض بقبضة ضيقة (Narrow-grip Push-up)", "آلة تفتيح الصدر (Pec-Deck Machine)", "آلة ضغط الصدر (Chest Press Machine)",
+    // Back
+    "الرفعة الميتة (Deadlift)", "سحب علوي (Pull-up)", "سحب علوي بقبضة واسعة (Wide-grip Pull-up)", "شين أب (Chin-up)", "تجديف بالبار (Barbell Row)", "تجديف بالبار بقبضة معكوسة (Pendlay Row)", "تجديف بالدمبل بذراع واحدة (One-Arm Dumbbell Row)", "سحب أرضي (Seated Cable Row)", "سحب أمامي (Lat Pulldown)", "سحب خلفي (Behind-the-neck Lat Pulldown)", "تمرين التي-بار (T-Bar Row)", "تمرين السوبرمان (Superman)", "تمرين الجسر (Glute Bridge)", "هايبر اكستنشن (Back Extension)",
+    // Legs
+    "سكوات (Squat)", "سكوات أمامي (Front Squat)", "سكوات بلغاري (Bulgarian Split Squat)", "ضغط الأرجل (Leg Press)", "اندفاع (Lunge)", "اندفاع جانبي (Side Lunge)", "رفعة رومانية مميتة (Romanian Deadlift)", "رفعة مميتة بساق واحدة (Single Leg Deadlift)", "تجعيد أوتار الركبة (Hamstring Curl)", "تمديد الساق (Leg Extension)", "رفع السمانة (Calf Raise)", "آلة خطف الفخذ (Hip Abduction Machine)", "آلة ضم الفخذ (Hip Adduction Machine)", "سكوات هاك (Hack Squat)",
+    // Shoulders
+    "ضغط الأكتاف (Overhead Press)", "ضغط الأكتاف بالدمبل (Dumbbell Shoulder Press)", "ضغط أرنولد (Arnold Press)", "رفع جانبي (Lateral Raise)", "رفع أمامي (Front Raise)", "رفع جانبي بالكابل (Cable Lateral Raise)", "تجديف عمودي (Upright Row)", "شراغز بالبار (Barbell Shrugs)", "شراغز بالدمبل (Dumbbell Shrugs)", "فيس بول (Face Pull)", "رفرفة عكسية (Reverse Pec-Deck)",
+    // Biceps
+    "تجعيد العضلة ذات الرأسين بالبار (Barbell Bicep Curl)", "تجعيد العضلة ذات الرأسين بالدمبل (Dumbbell Bicep Curl)", "تجعيد هامر (Hammer Curl)", "تجعيد بريتشر (Preacher Curl)", "تجعيد التركيز (Concentration Curl)", "تجعيد بالكابل (Cable Curl)", "شين أب بقبضة ضيقة (Close-grip Chin-up)",
+    // Triceps
+    "ترايسبس بوشดาวน์ (Tricep Pushdown)", "ترايسبس اكستنشن بالدمبل (Dumbbell Tricep Extension)", "ترايسبس اكستنشن بالكابل (Cable Tricep Extension)", "ضغط البنش بقبضة ضيقة (Close-Grip Bench Press)", "غطس للترايسبس (Tricep Dips)", "تمرين الكيك باك (Tricep Kickback)", "سكال كراشر (Skull Crusher)",
+    // Core
+    "تمرين المعدة (Crunch)", "رفع الساق (Leg Raise)", "بلانك (Plank)", "بلانك جانبي (Side Plank)", "تمرين الدراجة الهوائية (Bicycle Crunch)", "تمرين متسلق الجبال (Mountain Climbers)", "تمرين لمس أصابع القدم (Toe Touches)", "تمرين قاطع الخشب (Woodchoppers)", "تمرين العلم الروسي (Russian Twist)", "تمرين الـ V-up", "تمرين الـ Ab Rollout",
     // Cardio
-    "جري (Running)", "مشي سريع (Brisk Walking)", "ركوب الدراجة (Cycling)", "سباحة (Swimming)", "جهاز الإليبتيكال (Elliptical Trainer)", "نط الحبل (Jumping Rope)", "صعود السلالم (Stair Climbing)", "تجديف (Rowing Machine)", "تمارين عالية الكثافة (HIIT)", "بيربيز (Burpees)", "قفز الرافعات (Jumping Jacks)"
+    "جري (Running)", "هرولة (Jogging)", "مشي سريع (Brisk Walking)", "ركوب الدراجة (Cycling)", "ركوب الدراجة الثابتة (Stationary Bike)", "سباحة (Swimming)", "جهاز الإليبتيكال (Elliptical Trainer)", "نط الحبل (Jumping Rope)", "صعود السلالم (Stair Climbing)", "آلة التجديف (Rowing Machine)", "تمارين عالية الكثافة (HIIT)", "بيربيز (Burpees)", "قفز الرافعات (Jumping Jacks)", "صندوق القفز (Box Jumps)", "ضرب الحبال (Battle Ropes)",
+    // Stretching & Flexibility
+    "تمدد أوتار الركبة (Hamstring Stretch)", "تمدد عضلات الفخذ الرباعية (Quad Stretch)", "تمدد الصدر (Chest Stretch)", "تمدد الكتف (Shoulder Stretch)", "تمدد الظهر (Cat-Cow Stretch)", "تمدد عضلة الحمامة (Pigeon Pose)", "تمدد الكوبرا (Cobra Pose)", "وضعية الطفل (Child's Pose)", "يوجا (Yoga)", "بيلاتس (Pilates)"
 ];
-
 
 interface CourseConfig {
   daysPerWeek: number;
@@ -120,7 +122,7 @@ function CourseRegistration({ onCourseCreate }: { onCourseCreate: (config: Cours
   );
 }
 
-function WorkoutPlanSetup({ config }: { config: CourseConfig }) {
+function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (plan: WorkoutDay[]) => void }) {
     const [workoutDays, setWorkoutDays] = useState<WorkoutDay[]>(
         Array.from({ length: config.daysPerWeek }, (_, i) => ({
             day: i + 1,
@@ -142,7 +144,7 @@ function WorkoutPlanSetup({ config }: { config: CourseConfig }) {
 
     const openAddExerciseDialog = (day: number) => {
         setSelectedDay(day);
-        setNewExercise({ type: 'strength' });
+        setNewExercise({ type: config.workoutType === 'cardio' ? 'cardio' : 'strength' });
         setSearchTerm("");
         setIsDialogOpen(true);
     };
@@ -153,9 +155,9 @@ function WorkoutPlanSetup({ config }: { config: CourseConfig }) {
         const finalExercise: Exercise = {
             name: newExercise.name,
             type: newExercise.type,
-            sets: newExercise.type === 'strength' ? Number(newExercise.sets) : undefined,
-            reps: newExercise.type === 'strength' ? Number(newExercise.reps) : undefined,
-            duration: newExercise.type === 'cardio' ? Number(newExercise.duration) : undefined,
+            sets: newExercise.type === 'strength' ? Number(newExercise.sets || 0) : undefined,
+            reps: newExercise.type === 'strength' ? Number(newExercise.reps || 0) : undefined,
+            duration: newExercise.type === 'cardio' ? Number(newExercise.duration || 0) : undefined,
         };
 
         setWorkoutDays(currentDays =>
@@ -181,11 +183,7 @@ function WorkoutPlanSetup({ config }: { config: CourseConfig }) {
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchTerm(e.target.value);
         setNewExercise({ ...newExercise, name: e.target.value });
-        if (e.target.value) {
-            setIsPopoverOpen(true);
-        } else {
-            setIsPopoverOpen(false);
-        }
+        setIsPopoverOpen(!!e.target.value);
     }
 
     const handleSelectExercise = (exerciseName: string) => {
@@ -194,6 +192,7 @@ function WorkoutPlanSetup({ config }: { config: CourseConfig }) {
         setIsPopoverOpen(false);
     }
 
+    const isPlanEmpty = workoutDays.every(day => day.exercises.length === 0);
 
     return (
         <>
@@ -246,7 +245,8 @@ function WorkoutPlanSetup({ config }: { config: CourseConfig }) {
                     </Accordion>
                 </CardContent>
                 <CardFooter>
-                    <Button size="lg" className="w-full text-lg">
+                    <Button size="lg" className="w-full text-lg" onClick={() => onSave(workoutDays)} disabled={isPlanEmpty}>
+                        <CheckSquare className='ml-2 h-5 w-5'/>
                         حفظ الكورس
                     </Button>
                 </CardFooter>
@@ -281,7 +281,7 @@ function WorkoutPlanSetup({ config }: { config: CourseConfig }) {
                                             <div
                                                 key={ex}
                                                 onClick={() => handleSelectExercise(ex)}
-                                                className="p-2 hover:bg-accent cursor-pointer"
+                                                className="p-2 hover:bg-accent cursor-pointer text-sm"
                                             >
                                                 {ex}
                                             </div>
@@ -360,13 +360,93 @@ function WorkoutPlanSetup({ config }: { config: CourseConfig }) {
     )
 }
 
+function WorkoutPlanDisplay({ plan, onEdit }: { plan: WorkoutDay[], onEdit: () => void }) {
+    return (
+        <Card>
+            <CardHeader className='flex-row items-center justify-between'>
+                <div>
+                    <CardTitle className="font-headline text-2xl tracking-tight">كورس التمرين الحالي</CardTitle>
+                    <CardDescription>هذه هي خطتك التدريبية المحفوظة. بالتوفيق!</CardDescription>
+                </div>
+                <Button variant="outline" size="icon" onClick={onEdit}>
+                    <Edit className='h-5 w-5' />
+                    <span className='sr-only'>تعديل الكورس</span>
+                </Button>
+            </CardHeader>
+            <CardContent>
+                <Accordion type="multiple" defaultValue={['day-1']} className="w-full">
+                    {plan.map(({ day, exercises }) => (
+                        <AccordionItem value={`day-${day}`} key={day}>
+                            <AccordionTrigger className="text-lg font-semibold">
+                                يوم التمرين {day}
+                            </AccordionTrigger>
+                            <AccordionContent className="space-y-4 pt-4">
+                                {exercises.length === 0 ? (
+                                    <div className="text-center text-muted-foreground p-4 border rounded-lg">
+                                        <p>لا توجد تمارين لهذا اليوم.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {exercises.map((ex, index) => (
+                                             <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
+                                                <div className='flex items-center gap-3'>
+                                                    <div className={cn("p-2 rounded-full", ex.type === 'strength' ? 'bg-primary/20' : 'bg-destructive/20')}>
+                                                        {ex.type === 'strength' ? <Dumbbell className="h-5 w-5 text-primary" /> : <Heart className="h-5 w-5 text-destructive" />}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-bold">{ex.name}</p>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            {ex.type === 'strength' ? `${ex.sets} مجموعات × ${ex.reps} عدات` : `${ex.duration} دقيقة`}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Label htmlFor={`ex-done-${day}-${index}`} className='cursor-pointer text-sm'>تم</Label>
+                                                    <Input type='checkbox' id={`ex-done-${day}-${index}`} className='h-5 w-5' />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </AccordionContent>
+                        </AccordionItem>
+                    ))}
+                </Accordion>
+            </CardContent>
+        </Card>
+    );
+}
 
 export function WorkoutCourse() {
-  const [courseConfig, setCourseConfig] = useState<CourseConfig | null>(null);
+    const [courseConfig, setCourseConfig] = useState<CourseConfig | null>(null);
+    const [savedPlan, setSavedPlan] = useState<WorkoutDay[] | null>(null);
 
-  if (courseConfig) {
-    return <WorkoutPlanSetup config={courseConfig} />;
-  }
+    const handleSavePlan = (plan: WorkoutDay[]) => {
+        setSavedPlan(plan);
+        setCourseConfig(null); // Hide the setup view
+    };
+    
+    const handleEditPlan = () => {
+        // To re-enter setup, we need a config. We can derive it from the saved plan.
+        if (savedPlan) {
+            setCourseConfig({
+                daysPerWeek: savedPlan.length,
+                // A simple logic to determine workoutType, can be improved
+                workoutType: savedPlan[0]?.exercises[0]?.type || 'mixed',
+            });
+            setSavedPlan(null);
+        }
+    };
+    
+    if (savedPlan) {
+        return <WorkoutPlanDisplay plan={savedPlan} onEdit={handleEditPlan} />;
+    }
 
-  return <CourseRegistration onCourseCreate={setCourseConfig} />;
+    if (courseConfig) {
+        return <WorkoutPlanSetup config={courseConfig} onSave={handleSavePlan} />;
+    }
+
+    return <CourseRegistration onCourseCreate={setCourseConfig} />;
 }
+
+    
