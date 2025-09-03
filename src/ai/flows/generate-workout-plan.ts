@@ -6,7 +6,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import { GenerateWorkoutPlanInputSchema, GenerateWorkoutPlanOutputSchema, GenerateWorkoutPlanInput } from '@/app/actions';
+import { GenerateWorkoutPlanInputSchema, GenerateWorkoutPlanOutputSchema, GenerateWorkoutPlanInput } from '@/app/types';
 
 
 const prompt = ai.definePrompt({

@@ -12,7 +12,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { getWorkoutCaloriesAction, WorkoutState, generateAIPlanAction, AIPlanState, GenerateWorkoutPlanInput } from '@/app/actions';
+import { getWorkoutCaloriesAction, WorkoutState, generateAIPlanAction, AIPlanState } from '@/app/actions';
+import { GenerateWorkoutPlanInput, GenerateWorkoutPlanOutput } from '@/app/types';
 import { format } from 'date-fns';
 
 
@@ -473,22 +474,31 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
                 const sets = getNumericValue(e.actualSets);
                 const reps = getNumericValue(e.actualReps);
                 const weight = getNumericValue(e.actualWeight);
+
+                let hasMetrics = false;
     
                 if (e.type !== 'strength') {
-                    if (duration) exerciseData.durationInMinutes = duration;
+                    if (duration) {
+                        exerciseData.durationInMinutes = duration;
+                        hasMetrics = true;
+                    }
                 } else {
-                    if (sets) exerciseData.sets = sets;
-                    if (reps) exerciseData.reps = reps;
-                    if (weight) exerciseData.weight = weight;
+                    if (sets) {
+                        exerciseData.sets = sets;
+                        hasMetrics = true;
+                    }
+                    if (reps) {
+                        exerciseData.reps = reps;
+                        hasMetrics = true;
+                    }
+                    if (weight) {
+                        exerciseData.weight = weight;
+                    }
                 }
 
-                // Only include if it has some metric to calculate
-                if (Object.keys(exerciseData).length > 2) {
-                    return exerciseData;
-                }
-                return null;
+                return hasMetrics ? exerciseData : null;
             })
-            .filter(Boolean);
+            .filter((e): e is NonNullable<typeof e> => e !== null);
         
         if (exercisesToCalculate.length === 0) {
             console.error("No valid exercise data to calculate.");
@@ -572,8 +582,8 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
                                                         <div>
                                                             <p className="font-bold">{ex.name}</p>
                                                             <p className="text-sm text-muted-foreground">
-                                                                {ex.type === 'strength' && `الهدف: ${ex.targetSets} مجموعات × ${ex.targetReps} عدات @ ${ex.targetWeight}كغ`}
-                                                                {(ex.type === 'cardio' || ex.type === 'flexibility') && `الهدف: ${ex.targetDuration} دقيقة`}
+                                                                {ex.type === 'strength' && `الهدف: ${ex.targetSets || 0} مجموعات × ${ex.targetReps || 0} عدات @ ${ex.targetWeight || 0}كغ`}
+                                                                {(ex.type === 'cardio' || ex.type === 'flexibility') && `الهدف: ${ex.targetDuration || 0} دقيقة`}
                                                             </p>
                                                         </div>
                                                     </div>
@@ -662,12 +672,11 @@ export function WorkoutCourse() {
     };
     
 
-    if (savedPlan) {
+    if (savedPlan && !courseConfig) {
         return <WorkoutPlanDisplay plan={savedPlan} onEdit={handleEditPlan} />;
     }
 
     if (courseConfig) {
-        // Pass savedPlan to allow editing the existing plan
         return <WorkoutPlanSetup config={courseConfig} existingPlan={savedPlan} onSave={handleSavePlan} />;
     }
 
