@@ -9,11 +9,11 @@ export function Header() {
           <Leaf className="h-6 w-6 text-primary-foreground" />
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground font-headline">
-          Sehat Coach
+          صحة كوتش
         </h1>
       </div>
       <Avatar>
-        <AvatarImage src="https://picsum.photos/100/100" alt="User avatar" data-ai-hint="person face" />
+        <AvatarImage src="https://picsum.photos/100/100" alt="الصورة الرمزية للمستخدم" data-ai-hint="person face" />
         <AvatarFallback>U</AvatarFallback>
       </Avatar>
     </header>

@@ -23,13 +23,13 @@ function SubmitButton() {
     <Button type="submit" disabled={pending} className="w-full">
       {pending ? (
         <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Generating...
+          <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+          جارٍ الإنشاء...
         </>
       ) : (
         <>
-          <Sparkles className="mr-2 h-4 w-4" />
-          Generate Recipe
+          <Sparkles className="ml-2 h-4 w-4" />
+          إنشاء وصفة
         </>
       )}
     </Button>
@@ -44,7 +44,7 @@ export function RecipeGenerator() {
     if (state.error) {
       toast({
         variant: "destructive",
-        title: "Oh no! Something went wrong.",
+        title: "أوه لا! حدث خطأ ما.",
         description: state.error,
       })
     }
@@ -54,26 +54,26 @@ export function RecipeGenerator() {
     <Card className="shadow-sm">
       <form action={formAction}>
         <CardHeader>
-          <CardTitle className="font-headline tracking-tight">Personalized Recipes</CardTitle>
-          <CardDescription>Generate a healthy recipe with ingredients you have.</CardDescription>
+          <CardTitle className="font-headline tracking-tight">وصفات مخصصة</CardTitle>
+          <CardDescription>احصل على وصفة صحية بالمكونات المتوفرة لديك.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="ingredients">Available Ingredients</Label>
+            <Label htmlFor="ingredients">المكونات المتوفرة</Label>
             <Textarea
               id="ingredients"
               name="ingredients"
-              placeholder="e.g., chicken breast, broccoli, quinoa, olive oil"
+              placeholder="مثال: صدر دجاج، بروكلي، كينوا، زيت زيتون"
               required
               rows={3}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="dietaryNeeds">Dietary Needs (Optional)</Label>
+            <Label htmlFor="dietaryNeeds">الاحتياجات الغذائية (اختياري)</Label>
             <Input
               id="dietaryNeeds"
               name="dietaryNeeds"
-              placeholder="e.g., vegetarian, gluten-free"
+              placeholder="مثال: نباتي، خالي من الغلوتين"
             />
           </div>
         </CardContent>
@@ -91,15 +91,15 @@ export function RecipeGenerator() {
             <h3 className="text-xl font-bold font-headline text-primary">{state.data.recipeName}</h3>
           </div>
           <div>
-            <h4 className="font-semibold mb-2">Ingredients:</h4>
+            <h4 className="font-semibold mb-2">المكونات:</h4>
             <p className="text-sm text-muted-foreground whitespace-pre-line">{state.data.ingredients}</p>
           </div>
           <div>
-            <h4 className="font-semibold mb-2">Instructions:</h4>
+            <h4 className="font-semibold mb-2">التعليمات:</h4>
             <p className="text-sm text-muted-foreground whitespace-pre-line">{state.data.instructions}</p>
           </div>
            <div>
-            <h4 className="font-semibold mb-2">Estimated Calories:</h4>
+            <h4 className="font-semibold mb-2">السعرات الحرارية التقديرية:</h4>
             <p className="text-lg font-mono font-bold text-foreground">{state.data.calories}</p>
           </div>
         </CardContent>

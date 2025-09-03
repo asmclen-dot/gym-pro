@@ -5,16 +5,16 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Bed, Droplets, Leaf } from 'lucide-react';
 
 const habits = [
-  { id: 'water', label: 'Drink 8 glasses of water', icon: <Droplets /> },
-  { id: 'sleep', label: 'Sleep 7-8 hours', icon: <Bed /> },
-  { id: 'sugar', label: 'Avoid sugary drinks', icon: <Leaf /> },
+  { id: 'water', label: 'شرب 8 أكواب من الماء', icon: <Droplets /> },
+  { id: 'sleep', label: 'النوم 7-8 ساعات', icon: <Bed /> },
+  { id: 'sugar', label: 'تجنب المشروبات السكرية', icon: <Leaf /> },
 ];
 
 export function HabitTracker() {
   return (
     <Card className="shadow-sm">
       <CardHeader>
-        <CardTitle className="font-headline tracking-tight">Daily Habits</CardTitle>
+        <CardTitle className="font-headline tracking-tight">العادات اليومية</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">

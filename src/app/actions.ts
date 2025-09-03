@@ -4,7 +4,7 @@ import { generatePersonalizedRecipe, PersonalizedRecipeInput } from '@/ai/flows/
 import { z } from 'zod';
 
 const recipeSchema = z.object({
-  ingredients: z.string().min(10, { message: 'Please list at least a few ingredients.' }),
+  ingredients: z.string().min(10, { message: 'يرجى ذكر بعض المكونات على الأقل.' }),
   dietaryNeeds: z.string().optional(),
 });
 
@@ -23,8 +23,8 @@ export async function getRecipeAction(prevState: RecipeState, formData: FormData
   if (!validatedFields.success) {
     return {
       data: null,
-      error: 'Invalid input. Please check your ingredients list.',
-      message: 'Validation failed.',
+      error: 'إدخال غير صالح. يرجى التحقق من قائمة المكونات الخاصة بك.',
+      message: 'فشل التحقق من الصحة.',
     };
   }
 
@@ -33,14 +33,14 @@ export async function getRecipeAction(prevState: RecipeState, formData: FormData
     return {
       data: recipe,
       error: null,
-      message: 'Recipe generated successfully!',
+      message: 'تم إنشاء الوصفة بنجاح!',
     };
   } catch (e) {
-    const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
+    const errorMessage = e instanceof Error ? e.message : 'حدث خطأ غير معروف.';
     return {
       data: null,
-      error: `Failed to generate recipe: ${errorMessage}`,
-      message: 'AI generation failed.',
+      error: `فشل إنشاء الوصفة: ${errorMessage}`,
+      message: 'فشل إنشاء الذكاء الاصطناعي.',
     };
   }
 }

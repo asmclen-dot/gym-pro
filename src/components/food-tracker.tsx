@@ -4,32 +4,32 @@ import { Button } from '@/components/ui/button';
 import { Barcode, PlusCircle, Search, UtensilsCrossed } from 'lucide-react';
 
 const sampleFoods = [
-  { name: 'Apple', calories: 95, portion: '1 medium' },
-  { name: 'Grilled Chicken Breast', calories: 165, portion: '100g' },
-  { name: 'Brown Rice', calories: 215, portion: '1 cup, cooked' },
+  { name: 'تفاحة', calories: 95, portion: '1 متوسطة' },
+  { name: 'صدر دجاج مشوي', calories: 165, portion: '100 جرام' },
+  { name: 'أرز بني', calories: 215, portion: '1 كوب، مطبوخ' },
 ];
 
 export function FoodTracker() {
   return (
     <Card className="shadow-sm">
       <CardHeader>
-        <CardTitle className="font-headline tracking-tight">Food Diary</CardTitle>
-        <CardDescription>Log your meals to stay on track.</CardDescription>
+        <CardTitle className="font-headline tracking-tight">يوميات الطعام</CardTitle>
+        <CardDescription>سجل وجباتك للبقاء على المسار الصحيح.</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col sm:flex-row gap-2 mb-6">
           <div className="relative flex-grow">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input placeholder="Search for a food..." className="pl-10" />
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input placeholder="ابحث عن طعام..." className="pr-10" />
           </div>
           <Button variant="outline">
-            <Barcode className="mr-2 h-5 w-5" />
-            Scan Barcode
+            <Barcode className="ml-2 h-5 w-5" />
+            مسح الباركود
           </Button>
         </div>
 
         <div className="space-y-4">
-          <h4 className="font-semibold text-muted-foreground">Today's Log</h4>
+          <h4 className="font-semibold text-muted-foreground">سجل اليوم</h4>
           {sampleFoods.map((food, index) => (
             <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
               <div className="flex items-center gap-4">
@@ -42,14 +42,14 @@ export function FoodTracker() {
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-semibold">{food.calories} kcal</p>
+                <p className="font-semibold">{food.calories} سعر حراري</p>
               </div>
             </div>
           ))}
 
           <Button variant="ghost" className="w-full text-primary hover:text-primary">
-            <PlusCircle className="mr-2 h-5 w-5" />
-            Add Another Food
+            <PlusCircle className="ml-2 h-5 w-5" />
+            إضافة طعام آخر
           </Button>
         </div>
       </CardContent>

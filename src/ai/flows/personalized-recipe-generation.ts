@@ -27,9 +27,9 @@ const PersonalizedRecipeInputSchema = z.object({
 export type PersonalizedRecipeInput = z.infer<typeof PersonalizedRecipeInputSchema>;
 
 const PersonalizedRecipeOutputSchema = z.object({
-  recipeName: z.string().describe("The name of the generated recipe."),
-  ingredients: z.string().describe("A list of ingredients required for the recipe."),
-  instructions: z.string().describe("Step-by-step instructions for preparing the recipe."),
+  recipeName: z.string().describe("The name of the generated recipe in Arabic."),
+  ingredients: z.string().describe("A list of ingredients required for the recipe in Arabic."),
+  instructions: z.string().describe("Step-by-step instructions for preparing the recipe in Arabic."),
   calories: z.string().describe("The estimated calorie count for the recipe."),
 });
 export type PersonalizedRecipeOutput = z.infer<typeof PersonalizedRecipeOutputSchema>;
@@ -42,17 +42,17 @@ const prompt = ai.definePrompt({
   name: 'personalizedRecipePrompt',
   input: {schema: PersonalizedRecipeInputSchema},
   output: {schema: PersonalizedRecipeOutputSchema},
-  prompt: `You are a personal chef creating a personalized recipe based on the available ingredients, and dietary restrictions.
+  prompt: `You are a personal chef creating a personalized recipe in Arabic based on the available ingredients, and dietary restrictions.
 
   Available Ingredients: {{{ingredients}}}
   Dietary Restrictions: {{#if dietaryNeeds}}{{{dietaryNeeds}}}{{else}}None{{/if}}
 
-  Create a recipe that is healthy, delicious, and suitable for weight loss.
+  Create a recipe that is healthy, delicious, and suitable for weight loss. The response must be in Arabic.
 
   Ensure the recipe includes:
-  * A creative name for the recipe.
-  * A list of ingredients with quantities.
-  * Step-by-step preparation instructions.
+  * A creative name for the recipe in Arabic.
+  * A list of ingredients with quantities in Arabic.
+  * Step-by-step preparation instructions in Arabic.
   * An estimated calorie count for the entire recipe.
 
   Format the response in a JSON format that can be parsed by Typescript, including descriptions from the output schema.  Do not include any conversational text before or after the JSON.

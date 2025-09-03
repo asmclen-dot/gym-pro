@@ -19,7 +19,7 @@ export function Stats() {
   return (
     <Card className="shadow-sm">
       <CardHeader>
-        <CardTitle className="font-headline tracking-tight">Today's Progress</CardTitle>
+        <CardTitle className="font-headline tracking-tight">تقدم اليوم</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
@@ -27,9 +27,9 @@ export function Stats() {
             <div className="flex items-center justify-between text-muted-foreground text-sm">
               <div className="flex items-center gap-2 font-medium">
                 <Flame className="w-5 h-5 text-red-500" />
-                <span>Calories</span>
+                <span>السعرات الحرارية</span>
               </div>
-              <span className="font-mono">{caloriesConsumed.toLocaleString()} / {calorieGoal.toLocaleString()} kcal</span>
+              <span className="font-mono">{caloriesConsumed.toLocaleString()} / {calorieGoal.toLocaleString()} سعر حراري</span>
             </div>
             <Progress value={calorieProgress} className="h-2" indicatorClassName="bg-red-500" />
           </div>
@@ -37,7 +37,7 @@ export function Stats() {
             <div className="flex items-center justify-between text-muted-foreground text-sm">
               <div className="flex items-center gap-2 font-medium">
                 <Footprints className="w-5 h-5 text-primary" />
-                <span>Steps</span>
+                <span>الخطوات</span>
               </div>
               <span className="font-mono">{stepsTaken.toLocaleString()} / {stepsGoal.toLocaleString()}</span>
             </div>
@@ -47,7 +47,7 @@ export function Stats() {
             <div className="flex items-center justify-between text-muted-foreground text-sm">
                <div className="flex items-center gap-2 font-medium">
                 <Target className="w-5 h-5 text-blue-500" />
-                <span>Points</span>
+                <span>النقاط</span>
               </div>
               <span className="font-mono text-lg font-semibold text-foreground">{points}</span>
             </div>

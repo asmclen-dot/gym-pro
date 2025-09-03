@@ -6,18 +6,18 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from '@/lib/utils';
 
 const badges = [
-  { name: 'First Steps', date: 'June 1, 2024', icon: <Star />, achieved: true },
-  { name: '7-Day Streak', date: 'June 7, 2024', icon: <Medal />, achieved: true },
-  { name: 'Perfect Week', date: 'Not yet', icon: <Trophy />, achieved: false },
-  { name: 'Milestone: 5kg', date: 'Not yet', icon: <Award />, achieved: false },
+  { name: 'الخطوات الأولى', date: '1 يونيو 2024', icon: <Star />, achieved: true },
+  { name: 'سلسلة 7 أيام', date: '7 يونيو 2024', icon: <Medal />, achieved: true },
+  { name: 'أسبوع مثالي', date: 'لم يتم بعد', icon: <Trophy />, achieved: false },
+  { name: 'إنجاز: 5 كجم', date: 'لم يتم بعد', icon: <Award />, achieved: false },
 ];
 
 export function Achievements() {
   return (
     <Card className="shadow-sm">
       <CardHeader>
-        <CardTitle className="font-headline tracking-tight">Achievements</CardTitle>
-        <CardDescription>Celebrate your progress!</CardDescription>
+        <CardTitle className="font-headline tracking-tight">الإنجازات</CardTitle>
+        <CardDescription>احتفل بتقدمك!</CardDescription>
       </CardHeader>
       <CardContent>
         <TooltipProvider delayDuration={0}>
@@ -42,7 +42,7 @@ export function Achievements() {
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="font-bold">{badge.name}</p>
-                  <p className="text-sm text-muted-foreground">{badge.achieved ? `Earned: ${badge.date}` : "Not earned yet"}</p>
+                  <p className="text-sm text-muted-foreground">{badge.achieved ? `تم الحصول عليه: ${badge.date}` : "لم يتم الحصول عليه بعد"}</p>
                 </TooltipContent>
               </Tooltip>
             ))}
