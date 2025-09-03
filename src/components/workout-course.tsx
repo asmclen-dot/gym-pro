@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,18 @@ import { Dumbbell, Heart, Combine, PlusCircle, Trash2 } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+
+
+const exerciseList = [
+    // Strength
+    "ضغط البنش (Bench Press)", "سكوات (Squat)", "الرفعة الميتة (Deadlift)", "ضغط الأكتاف (Overhead Press)", "تجديف بالبار (Barbell Row)",
+    "سحب علوي (Pull-up)", "ضغط الأرجل (Leg Press)", "تجعيد العضلة ذات الرأسين (Bicep Curl)", "ترايسبس بوشดาวน์ (Tricep Pushdown)",
+    "اندفاع (Lunge)", "رفع جانبي (Lateral Raise)", "تمرين المعدة (Crunch)", "بلانك (Plank)",
+    // Cardio
+    "جري (Running)", "ركوب الدراجة (Cycling)", "سباحة (Swimming)", "جهاز الإليبتيكال (Elliptical Trainer)", "نط الحبل (Jumping Rope)",
+    "صعود السلالم (Stair Climbing)", "تجديف (Rowing Machine)", "تمارين عالية الكثافة (HIIT)",
+];
 
 
 interface CourseConfig {
@@ -111,10 +123,20 @@ function WorkoutPlanSetup({ config }: { config: CourseConfig }) {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedDay, setSelectedDay] = useState<number | null>(null);
     const [newExercise, setNewExercise] = useState<Partial<Exercise>>({ type: 'strength' });
+    const [searchTerm, setSearchTerm] = useState("");
+    const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+
+    const filteredExercises = useMemo(() =>
+        searchTerm
+            ? exerciseList.filter(ex => ex.toLowerCase().includes(searchTerm.toLowerCase()))
+            : [],
+        [searchTerm]
+    );
 
     const openAddExerciseDialog = (day: number) => {
         setSelectedDay(day);
         setNewExercise({ type: 'strength' });
+        setSearchTerm("");
         setIsDialogOpen(true);
     };
 
@@ -147,6 +169,22 @@ function WorkoutPlanSetup({ config }: { config: CourseConfig }) {
                     : day
             )
         );
+    }
+    
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchTerm(e.target.value);
+        setNewExercise({ ...newExercise, name: e.target.value });
+        if (e.target.value) {
+            setIsPopoverOpen(true);
+        } else {
+            setIsPopoverOpen(false);
+        }
+    }
+
+    const handleSelectExercise = (exerciseName: string) => {
+        setSearchTerm(exerciseName);
+        setNewExercise({ ...newExercise, name: exerciseName });
+        setIsPopoverOpen(false);
     }
 
 
@@ -215,16 +253,41 @@ function WorkoutPlanSetup({ config }: { config: CourseConfig }) {
                             أدخل تفاصيل التمرين.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="exercise-name">اسم التمرين</Label>
-                            <Input
-                                id="exercise-name"
-                                value={newExercise.name || ''}
-                                onChange={(e) => setNewExercise({ ...newExercise, name: e.target.value })}
-                                placeholder="مثال: ضغط البنش"
-                            />
-                        </div>
+                     <div className="grid gap-4 py-4">
+                        <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                            <PopoverTrigger asChild>
+                                <div className="space-y-2">
+                                    <Label htmlFor="exercise-name">اسم التمرين</Label>
+                                    <Input
+                                        id="exercise-name"
+                                        value={searchTerm}
+                                        onChange={handleSearchChange}
+                                        placeholder="اكتب للبحث عن تمرين..."
+                                        autoComplete="off"
+                                    />
+                                </div>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                                {filteredExercises.length > 0 ? (
+                                    <div className="max-h-60 overflow-y-auto">
+                                        {filteredExercises.map((ex) => (
+                                            <div
+                                                key={ex}
+                                                onClick={() => handleSelectExercise(ex)}
+                                                className="p-2 hover:bg-accent cursor-pointer"
+                                            >
+                                                {ex}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="p-2 text-center text-sm text-muted-foreground">
+                                        {searchTerm && "لم يتم العثور على تمارين."}
+                                    </div>
+                                )}
+                            </PopoverContent>
+                        </Popover>
+
                         <div className="space-y-2">
                              <Label htmlFor="exercise-type">نوع التمرين</Label>
                              <Select
@@ -300,3 +363,5 @@ export function WorkoutCourse() {
 
   return <CourseRegistration onCourseCreate={setCourseConfig} />;
 }
+
+    
