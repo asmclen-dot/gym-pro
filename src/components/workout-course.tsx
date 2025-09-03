@@ -424,6 +424,12 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
             })
         );
     };
+    
+    const getNumericValue = (value: string | number | undefined | null): number | undefined => {
+        if (value === undefined || value === null || value === '') return undefined;
+        const num = Number(value);
+        return isNaN(num) ? undefined : num;
+    };
 
     const handleCalculate = async (dayNumber: number) => {
         setLoadingDay(dayNumber);
@@ -433,29 +439,21 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
             return;
         }
 
-        const exercisesToCalculate = dayData.exercises
-          .map(e => {
+        const exercisesToCalculate = dayData.exercises.map(e => {
             const exerciseData: any = {
                 name: e.name,
                 type: e.type,
             };
 
-            const duration = e.actualDuration ?? e.targetDuration;
-            const sets = e.actualSets ?? e.targetSets;
-            const reps = e.actualReps ?? e.targetReps;
-            const weight = e.actualWeight ?? e.targetWeight;
+            const duration = getNumericValue(e.actualDuration) ?? getNumericValue(e.targetDuration);
+            const sets = getNumericValue(e.actualSets) ?? getNumericValue(e.targetSets);
+            const reps = getNumericValue(e.actualReps) ?? getNumericValue(e.targetReps);
+            const weight = getNumericValue(e.actualWeight) ?? getNumericValue(e.targetWeight);
 
-            if (duration) exerciseData.durationInMinutes = Number(duration);
-            if (sets) exerciseData.sets = Number(sets);
-            if (reps) exerciseData.reps = Number(reps);
-            if (weight) exerciseData.weight = Number(weight);
-            
-            // Filter out empty/NaN properties
-            Object.keys(exerciseData).forEach(key => {
-                if (exerciseData[key] === undefined || exerciseData[key] === null || isNaN(exerciseData[key])) {
-                    delete exerciseData[key];
-                }
-            });
+            if (duration !== undefined) exerciseData.durationInMinutes = duration;
+            if (sets !== undefined) exerciseData.sets = sets;
+            if (reps !== undefined) exerciseData.reps = reps;
+            if (weight !== undefined) exerciseData.weight = weight;
 
             return exerciseData;
         });
@@ -553,20 +551,20 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
                                                         <>
                                                             <Weight className="h-4 w-4 text-muted-foreground" />
                                                             <Input type='number' placeholder={`${ex.targetWeight || 0} كغ`} className='h-8 w-24 text-sm'
-                                                              onChange={(e) => handlePerformanceChange(day, ex.id, 'actualWeight', parseInt(e.target.value))} />
+                                                              onChange={(e) => handlePerformanceChange(day, ex.id, 'actualWeight', e.target.value)} />
                                                             <Repeat className="h-4 w-4 text-muted-foreground" />
                                                              <Input type='number' placeholder={`${ex.targetSets || 0}`} className='h-8 w-16 text-sm'
-                                                              onChange={(e) => handlePerformanceChange(day, ex.id, 'actualSets', parseInt(e.target.value))} />
+                                                              onChange={(e) => handlePerformanceChange(day, ex.id, 'actualSets', e.target.value)} />
                                                             <span className='text-muted-foreground'>x</span>
                                                             <Input type='number' placeholder={`${ex.targetReps || 0}`} className='h-8 w-16 text-sm'
-                                                              onChange={(e) => handlePerformanceChange(day, ex.id, 'actualReps', parseInt(e.target.value))} />
+                                                              onChange={(e) => handlePerformanceChange(day, ex.id, 'actualReps', e.target.value)} />
                                                         </>
                                                     )}
                                                     {(ex.type === 'cardio' || ex.type === 'flexibility') && (
                                                          <>
                                                             <Clock className="h-4 w-4 text-muted-foreground" />
                                                             <Input type='number' placeholder={`${ex.targetDuration || 0} دقيقة`} className='h-8 w-28 text-sm'
-                                                              onChange={(e) => handlePerformanceChange(day, ex.id, 'actualDuration', parseInt(e.target.value))} />
+                                                              onChange={(e) => handlePerformanceChange(day, ex.id, 'actualDuration', e.target.value)} />
                                                         </>
                                                     )}
                                                 </div>
@@ -637,3 +635,4 @@ export function WorkoutCourse() {
 }
 
     
+
