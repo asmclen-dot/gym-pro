@@ -51,10 +51,17 @@ interface Exercise {
     id: string;
     name: string;
     type: 'strength' | 'cardio' | 'flexibility';
-    sets?: number;
-    reps?: number;
-    duration?: number; // in minutes
-    weight?: number; // in kg
+    // Planned values
+    targetSets?: number;
+    targetReps?: number;
+    targetDuration?: number; // in minutes
+    targetWeight?: number; // in kg
+    // Actual logged values
+    actualSets?: number;
+    actualReps?: number;
+    actualDuration?: number;
+    actualWeight?: number;
+    done?: boolean;
 }
 
 interface WorkoutDay {
@@ -169,10 +176,10 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
             id: crypto.randomUUID(),
             name: newExercise.name,
             type: newExercise.type,
-            sets: newExercise.type === 'strength' ? Number(newExercise.sets || 3) : undefined,
-            reps: newExercise.type === 'strength' ? Number(newExercise.reps || 12) : undefined,
-            duration: newExercise.type === 'cardio' || newExercise.type === 'flexibility' ? Number(newExercise.duration || 15) : undefined,
-            weight: newExercise.type === 'strength' ? Number(newExercise.weight || 10) : undefined,
+            targetSets: newExercise.type === 'strength' ? Number(newExercise.targetSets || 3) : undefined,
+            targetReps: newExercise.type === 'strength' ? Number(newExercise.targetReps || 12) : undefined,
+            targetDuration: newExercise.type === 'cardio' || newExercise.type === 'flexibility' ? Number(newExercise.targetDuration || 15) : undefined,
+            targetWeight: newExercise.type === 'strength' ? Number(newExercise.targetWeight || 10) : undefined,
         };
 
         setWorkoutDays(currentDays =>
@@ -267,8 +274,8 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
                                                         <div>
                                                             <p className="font-bold">{ex.name}</p>
                                                             <p className="text-sm text-muted-foreground">
-                                                                {ex.type === 'strength' && `الهدف: ${ex.sets} مجموعات × ${ex.reps} عدات @ ${ex.weight}كغ`}
-                                                                {(ex.type === 'cardio' || ex.type === 'flexibility') && `الهدف: ${ex.duration} دقيقة`}
+                                                                {ex.type === 'strength' && `الهدف: ${ex.targetSets} مجموعات × ${ex.targetReps} عدات @ ${ex.targetWeight}كغ`}
+                                                                {(ex.type === 'cardio' || ex.type === 'flexibility') && `الهدف: ${ex.targetDuration} دقيقة`}
                                                             </p>
                                                         </div>
                                                     </div>
@@ -359,23 +366,23 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
                         {newExercise.type === 'strength' && (
                             <div className="grid grid-cols-3 gap-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="weight">الوزن (كغ)</Label>
-                                    <Input id="weight" type="number" value={newExercise.weight || ''} onChange={(e) => setNewExercise({ ...newExercise, weight: parseInt(e.target.value) })} placeholder="10" />
+                                    <Label htmlFor="weight">الوزن المستهدف (كغ)</Label>
+                                    <Input id="weight" type="number" value={newExercise.targetWeight || ''} onChange={(e) => setNewExercise({ ...newExercise, targetWeight: parseInt(e.target.value) })} placeholder="10" />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="sets">المجموعات</Label>
-                                    <Input id="sets" type="number" value={newExercise.sets || ''} onChange={(e) => setNewExercise({ ...newExercise, sets: parseInt(e.target.value) })} placeholder="3" />
+                                    <Label htmlFor="sets">المجموعات المستهدفة</Label>
+                                    <Input id="sets" type="number" value={newExercise.targetSets || ''} onChange={(e) => setNewExercise({ ...newExercise, targetSets: parseInt(e.target.value) })} placeholder="3" />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="reps">العدات</Label>
-                                    <Input id="reps" type="number" value={newExercise.reps || ''} onChange={(e) => setNewExercise({ ...newExercise, reps: parseInt(e.target.value) })} placeholder="12" />
+                                    <Label htmlFor="reps">العدات المستهدفة</Label>
+                                    <Input id="reps" type="number" value={newExercise.targetReps || ''} onChange={(e) => setNewExercise({ ...newExercise, targetReps: parseInt(e.target.value) })} placeholder="12" />
                                 </div>
                             </div>
                         )}
                         {(newExercise.type === 'cardio' || newExercise.type === 'flexibility') && (
                              <div className="space-y-2">
-                                <Label htmlFor="duration">المدة (بالدقائق)</Label>
-                                <Input id="duration" type="number" value={newExercise.duration || ''} onChange={(e) => setNewExercise({ ...newExercise, duration: parseInt(e.target.value) })} placeholder="30" />
+                                <Label htmlFor="duration">المدة المستهدفة (بالدقائق)</Label>
+                                <Input id="duration" type="number" value={newExercise.targetDuration || ''} onChange={(e) => setNewExercise({ ...newExercise, targetDuration: parseInt(e.target.value) })} placeholder="30" />
                             </div>
                         )}
                     </div>
@@ -391,23 +398,54 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
     )
 }
 
-function WorkoutPlanDisplay({ plan, onEdit, onCalculateCalories }: { plan: WorkoutDay[], onEdit: () => void, onCalculateCalories: (exercises: Exercise[]) => void }) {
+function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[], onEdit: () => void }) {
+    const [plan, setPlan] = useState<WorkoutDay[]>(initialPlan);
     const [dailyCalories, setDailyCalories] = useState<Record<number, number | null>>({});
     const [loadingDay, setLoadingDay] = useState<number | null>(null);
 
-    const handleCalculate = async (dayNumber: number, exercises: Exercise[]) => {
+    const handlePerformanceChange = (dayNumber: number, exerciseId: string, field: keyof Exercise, value: string | number | boolean) => {
+        setPlan(currentPlan =>
+            currentPlan.map(day => {
+                if (day.day === dayNumber) {
+                    return {
+                        ...day,
+                        exercises: day.exercises.map(ex =>
+                            ex.id === exerciseId ? { ...ex, [field]: value } : ex
+                        )
+                    };
+                }
+                return day;
+            })
+        );
+    };
+
+    const handleCalculate = async (dayNumber: number) => {
         setLoadingDay(dayNumber);
+        const dayData = plan.find(d => d.day === dayNumber);
+        if (!dayData) {
+            setLoadingDay(null);
+            return;
+        }
+
+        const exercisesToCalculate = dayData.exercises.map(e => ({
+            name: e.name,
+            type: e.type,
+            // Send actual performance if available, otherwise fall back to target
+            durationInMinutes: e.actualDuration ?? e.targetDuration,
+            sets: e.actualSets ?? e.targetSets,
+            reps: e.actualReps ?? e.targetReps,
+            weight: e.actualWeight ?? e.targetWeight,
+        }));
+        
         const formData = new FormData();
         formData.append('type', 'full_day');
-        formData.append('exercises', JSON.stringify(exercises.map(e => ({ name: e.name, durationInMinutes: e.duration, sets: e.sets, reps: e.reps, weight: e.weight, type: e.type }))));
+        formData.append('exercises', JSON.stringify(exercisesToCalculate));
         
-        // This is a simplified way to call the action. In a real app, you might handle state more globally.
         const result: WorkoutState = await getWorkoutCaloriesAction({ data: null, error: null, message: null }, formData);
         
         if (result.data) {
             setDailyCalories(prev => ({ ...prev, [dayNumber]: result.data.estimatedCalories }));
         } else {
-            // Handle error, maybe show a toast
             console.error(result.error);
             setDailyCalories(prev => ({ ...prev, [dayNumber]: -1 })); // Use -1 to indicate an error
         }
@@ -445,7 +483,7 @@ function WorkoutPlanDisplay({ plan, onEdit, onCalculateCalories }: { plan: Worko
                                     <div className="space-y-3">
                                         {exercises.map((ex) => (
                                              <div key={ex.id} className="flex flex-col p-3 rounded-lg bg-secondary/50 gap-3">
-                                                <div className="flex items-center justify-between">
+                                                <div className="flex items-start justify-between">
                                                     <div className='flex items-center gap-3'>
                                                          <div className={cn("p-2 rounded-full", 
                                                           ex.type === 'strength' ? 'bg-primary/20' : 
@@ -458,45 +496,51 @@ function WorkoutPlanDisplay({ plan, onEdit, onCalculateCalories }: { plan: Worko
                                                         <div>
                                                             <p className="font-bold">{ex.name}</p>
                                                             <p className="text-sm text-muted-foreground">
-                                                                {ex.type === 'strength' && `الهدف: ${ex.sets} مجموعات × ${ex.reps} عدات @ ${ex.weight}كغ`}
-                                                                {(ex.type === 'cardio' || ex.type === 'flexibility') && `الهدف: ${ex.duration} دقيقة`}
+                                                                {ex.type === 'strength' && `الهدف: ${ex.targetSets} مجموعات × ${ex.targetReps} عدات @ ${ex.targetWeight}كغ`}
+                                                                {(ex.type === 'cardio' || ex.type === 'flexibility') && `الهدف: ${ex.targetDuration} دقيقة`}
                                                             </p>
                                                         </div>
                                                     </div>
                                                      <div className="flex items-center gap-2">
                                                         <Label htmlFor={`ex-done-${ex.id}`} className='cursor-pointer text-sm font-semibold'>تم</Label>
-                                                        <Input type='checkbox' id={`ex-done-${ex.id}`} className='h-5 w-5 accent-primary' />
+                                                        <Input type='checkbox' id={`ex-done-${ex.id}`} className='h-5 w-5 accent-primary' 
+                                                          checked={ex.done}
+                                                          onChange={(e) => handlePerformanceChange(day, ex.id, 'done', e.target.checked)}
+                                                        />
                                                     </div>
                                                 </div>
                                                 {/* Daily Performance Logging */}
-                                                <div className='flex items-center gap-2 pl-12'>
+                                                <div className='flex flex-wrap items-center gap-2 pl-12'>
                                                     <p className='text-sm font-semibold'>الأداء الفعلي:</p>
                                                     {ex.type === 'strength' && (
                                                         <>
                                                             <Weight className="h-4 w-4 text-muted-foreground" />
-                                                            <Input type='number' placeholder={`${ex.weight} كغ`} className='h-8 w-20 text-sm' />
+                                                            <Input type='number' placeholder={`${ex.targetWeight} كغ`} className='h-8 w-24 text-sm'
+                                                              onChange={(e) => handlePerformanceChange(day, ex.id, 'actualWeight', e.target.value)} />
                                                             <Repeat className="h-4 w-4 text-muted-foreground" />
-                                                            <Input type='text' placeholder={`${ex.sets}x${ex.reps}`} className='h-8 w-20 text-sm' />
+                                                             <Input type='number' placeholder={`${ex.targetSets}`} className='h-8 w-16 text-sm'
+                                                              onChange={(e) => handlePerformanceChange(day, ex.id, 'actualSets', e.target.value)} />
+                                                            <span className='text-muted-foreground'>x</span>
+                                                            <Input type='number' placeholder={`${ex.targetReps}`} className='h-8 w-16 text-sm'
+                                                              onChange={(e) => handlePerformanceChange(day, ex.id, 'actualReps', e.target.value)} />
                                                         </>
                                                     )}
                                                     {(ex.type === 'cardio' || ex.type === 'flexibility') && (
                                                          <>
                                                             <Clock className="h-4 w-4 text-muted-foreground" />
-                                                            <Input type='number' placeholder={`${ex.duration} دقيقة`} className='h-8 w-28 text-sm' />
+                                                            <Input type='number' placeholder={`${ex.targetDuration} دقيقة`} className='h-8 w-28 text-sm'
+                                                              onChange={(e) => handlePerformanceChange(day, ex.id, 'actualDuration', e.target.value)} />
                                                         </>
                                                     )}
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                        <BrainCircuit className="h-5 w-5 text-primary" />
-                                                    </Button>
                                                 </div>
                                             </div>
                                         ))}
                                         <div className='flex justify-between items-center pt-4'>
-                                             <Button onClick={() => handleCalculate(day, exercises)} disabled={loadingDay === day}>
+                                             <Button onClick={() => handleCalculate(day)} disabled={loadingDay === day}>
                                                 {loadingDay === day ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Flame className='ml-2 h-4 w-4'/>}
                                                 {loadingDay === day ? 'جارٍ الحساب...' : 'حساب سعرات اليوم'}
                                             </Button>
-                                            {dailyCalories[day] && dailyCalories[day]! > 0 && (
+                                            {dailyCalories[day] != null && dailyCalories[day]! > 0 && (
                                                 <p className='font-bold text-lg text-primary'>{dailyCalories[day]} سعر حراري</p>
                                             )}
                                             {dailyCalories[day] === -1 && (
@@ -535,19 +579,16 @@ export function WorkoutCourse() {
                 daysPerWeek: savedPlan.length,
                 workoutType: workoutType,
             });
-            // When editing, we should probably load the existing plan into the setup component
-            // For simplicity now, we just reset it.
+            // We should load the existing plan into the setup component.
+            // For now, we will just reset it to simplify.
+            // A more advanced implementation would pass `savedPlan` to WorkoutPlanSetup
             setSavedPlan(null);
         }
     };
     
-    const handleCalculateCalories = (exercises: Exercise[]) => {
-        // This is a placeholder for triggering the server action
-        console.log("Calculating calories for:", exercises);
-    };
 
     if (savedPlan) {
-        return <WorkoutPlanDisplay plan={savedPlan} onEdit={handleEditPlan} onCalculateCalories={handleCalculateCalories} />;
+        return <WorkoutPlanDisplay plan={savedPlan} onEdit={handleEditPlan} />;
     }
 
     if (courseConfig) {
@@ -556,3 +597,5 @@ export function WorkoutCourse() {
 
     return <CourseRegistration onCourseCreate={setCourseConfig} />;
 }
+
+    
