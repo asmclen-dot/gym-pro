@@ -77,9 +77,9 @@ export default function GymPage() {
           <Card className="shadow-lg">
             <form action={formAction}>
               <CardHeader>
-                <CardTitle>1. إنشاء خطة التمرين الأسبوعية</CardTitle>
+                <CardTitle>1. إنشاء جدول التمرين الأسبوعي</CardTitle>
                 <CardDescription>
-                  أخبرنا عن أهدافك وعدد أيام التمرين التي يوصي بها مدربك، وسيقوم الذكاء الاصطناعي بتنظيمها في جدول أسبوعي.
+                  أخبرنا عن أهدافك وعدد أيام التمرين التي تريدها، وسيقوم الذكاء الاصطناعي بتنظيمها في جدول أسبوعي.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
