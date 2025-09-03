@@ -14,13 +14,20 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 
 
 const exerciseList = [
-    // Strength
-    "ضغط البنش (Bench Press)", "سكوات (Squat)", "الرفعة الميتة (Deadlift)", "ضغط الأكتاف (Overhead Press)", "تجديف بالبار (Barbell Row)",
-    "سحب علوي (Pull-up)", "ضغط الأرجل (Leg Press)", "تجعيد العضلة ذات الرأسين (Bicep Curl)", "ترايسبس بوشดาวน์ (Tricep Pushdown)",
-    "اندفاع (Lunge)", "رفع جانبي (Lateral Raise)", "تمرين المعدة (Crunch)", "بلانك (Plank)",
+    // Strength - Chest
+    "ضغط البنش (Bench Press)", "ضغط البنش المائل (Incline Bench Press)", "ضغط البنش بالدمبل (Dumbbell Bench Press)", "تفتيح بالدمبل (Dumbbell Flyes)", "غطس (Dips)", "ضغط على الأرض (Push-up)",
+    // Strength - Back
+    "الرفعة الميتة (Deadlift)", "سحب علوي (Pull-up)", "شين أب (Chin-up)", "تجديف بالبار (Barbell Row)", "تجديف بالدمبل (Dumbbell Row)", "سحب أرضي (Seated Cable Row)", "تمرين السوبرمان (Superman)",
+    // Strength - Legs
+    "سكوات (Squat)", "سكوات أمامي (Front Squat)", "ضغط الأرجل (Leg Press)", "اندفاع (Lunge)", "رفعة رومانية مميتة (Romanian Deadlift)", "تجعيد أوتار الركبة (Hamstring Curl)", "تمديد الساق (Leg Extension)", "رفع السمانة (Calf Raise)",
+    // Strength - Shoulders
+    "ضغط الأكتاف (Overhead Press)", "رفع جانبي (Lateral Raise)", "رفع أمامي (Front Raise)", "تجديف عمودي (Upright Row)", "شراغز (Shrugs)",
+    // Strength - Arms
+    "تجعيد العضلة ذات الرأسين بالبار (Barbell Bicep Curl)", "تجعيد العضلة ذات الرأسين بالدمبل (Dumbbell Bicep Curl)", "تجعيد هامر (Hammer Curl)", "ترايسبس بوشดาวน์ (Tricep Pushdown)", "ترايسبس اكستنشن بالدمبل (Dumbbell Tricep Extension)", "ضغط البنش بقبضة ضيقة (Close-Grip Bench Press)",
+    // Strength - Core
+    "تمرين المعدة (Crunch)", "رفع الساق (Leg Raise)", "بلانك (Plank)", "بلانك جانبي (Side Plank)", "تمرين الدراجة الهوائية (Bicycle Crunch)",
     // Cardio
-    "جري (Running)", "ركوب الدراجة (Cycling)", "سباحة (Swimming)", "جهاز الإليبتيكال (Elliptical Trainer)", "نط الحبل (Jumping Rope)",
-    "صعود السلالم (Stair Climbing)", "تجديف (Rowing Machine)", "تمارين عالية الكثافة (HIIT)",
+    "جري (Running)", "مشي سريع (Brisk Walking)", "ركوب الدراجة (Cycling)", "سباحة (Swimming)", "جهاز الإليبتيكال (Elliptical Trainer)", "نط الحبل (Jumping Rope)", "صعود السلالم (Stair Climbing)", "تجديف (Rowing Machine)", "تمارين عالية الكثافة (HIIT)", "بيربيز (Burpees)", "قفز الرافعات (Jumping Jacks)"
 ];
 
 
@@ -250,7 +257,7 @@ function WorkoutPlanSetup({ config }: { config: CourseConfig }) {
                     <DialogHeader>
                         <DialogTitle>إضافة تمرين جديد لليوم {selectedDay}</DialogTitle>
                         <DialogDescription>
-                            أدخل تفاصيل التمرين.
+                            ابحث عن تمرين أو أدخل اسمًا جديدًا.
                         </DialogDescription>
                     </DialogHeader>
                      <div className="grid gap-4 py-4">
@@ -282,7 +289,7 @@ function WorkoutPlanSetup({ config }: { config: CourseConfig }) {
                                     </div>
                                 ) : (
                                     <div className="p-2 text-center text-sm text-muted-foreground">
-                                        {searchTerm && "لم يتم العثور على تمارين."}
+                                        {searchTerm && "لم يتم العثور على تمارين. يمكنك إضافته."}
                                     </div>
                                 )}
                             </PopoverContent>
@@ -363,5 +370,3 @@ export function WorkoutCourse() {
 
   return <CourseRegistration onCourseCreate={setCourseConfig} />;
 }
-
-    
