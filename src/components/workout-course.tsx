@@ -241,9 +241,14 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
                                 <AccordionTrigger className="text-lg font-semibold">
                                     <div className='flex items-center justify-between w-full pr-2'>
                                         <span>يوم التمرين {day}</span>
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="space-y-4 pt-4">
+                                     <div className="space-y-2 max-w-[200px]">
+                                        <Label>وقت التمرين</Label>
                                         <Select onValueChange={(value) => handleTargetTimeChange(day, value as WorkoutDay['targetTime'])} value={targetTime || undefined}>
-                                            <SelectTrigger className="w-[150px] h-9 text-sm" onClick={(e) => e.stopPropagation()}>
-                                                <SelectValue placeholder="وقت التمرين" />
+                                            <SelectTrigger className="h-9 text-sm">
+                                                <SelectValue placeholder="حدد الوقت" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="morning">صباحًا</SelectItem>
@@ -252,8 +257,6 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
                                             </SelectContent>
                                         </Select>
                                     </div>
-                                </AccordionTrigger>
-                                <AccordionContent className="space-y-4 pt-4">
                                     {exercises.length === 0 ? (
                                         <div className="text-center text-muted-foreground p-4 border rounded-lg">
                                             <p>لم تتم إضافة تمارين بعد.</p>
