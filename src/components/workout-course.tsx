@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dumbbell, Heart, Mix } from 'lucide-react';
+import { Dumbbell, Heart, Combine } from 'lucide-react';
 
 // Step 1: Course Registration State
 interface CourseConfig {
@@ -82,7 +82,7 @@ export function WorkoutCourse() {
               </SelectItem>
               <SelectItem value="mixed">
                  <div className="flex items-center gap-2">
-                  <Mix className="h-5 w-5 text-secondary-foreground" />
+                  <Combine className="h-5 w-5 text-secondary-foreground" />
                   <span>مختلط (قوة وكارديو)</span>
                 </div>
               </SelectItem>
