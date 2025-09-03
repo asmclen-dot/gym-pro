@@ -178,7 +178,7 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
                     : day
             )
         );
-    }
+    };
     
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchTerm(e.target.value);
@@ -429,10 +429,15 @@ export function WorkoutCourse() {
     const handleEditPlan = () => {
         // To re-enter setup, we need a config. We can derive it from the saved plan.
         if (savedPlan) {
+            const hasStrength = savedPlan.some(d => d.exercises.some(e => e.type === 'strength'));
+            const hasCardio = savedPlan.some(d => d.exercises.some(e => e.type === 'cardio'));
+            let workoutType: CourseConfig['workoutType'] = 'mixed';
+            if (hasStrength && !hasCardio) workoutType = 'strength';
+            if (!hasStrength && hasCardio) workoutType = 'cardio';
+
             setCourseConfig({
                 daysPerWeek: savedPlan.length,
-                // A simple logic to determine workoutType, can be improved
-                workoutType: savedPlan.some(d => d.exercises.some(e => e.type === 'strength')) && savedPlan.some(d => d.exercises.some(e => e.type === 'cardio')) ? 'mixed' : (savedPlan[0]?.exercises[0]?.type || 'mixed'),
+                workoutType: workoutType,
             });
             setSavedPlan(null);
         }
