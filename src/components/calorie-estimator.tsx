@@ -37,7 +37,7 @@ function SubmitButton() {
   );
 }
 
-export function AIWorkoutPlanner() {
+export function CalorieEstimator() {
   const [state, formAction] = useActionState(getWorkoutCaloriesAction, initialState);
   const { toast } = useToast();
 

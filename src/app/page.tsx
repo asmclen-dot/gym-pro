@@ -1,15 +1,13 @@
 import { Header } from '@/components/header';
 import { Stats } from '@/components/stats';
 import { FoodTracker } from '@/components/food-tracker';
-import { ActivityTracker } from '@/components/activity-tracker';
-import { HabitTracker } from '@/components/habit-tracker';
 import { RecipeGenerator } from '@/components/recipe-generator';
 import { Achievements } from '@/components/achievements';
 import { UserProfile } from '@/components/user-profile';
-import { AIWorkoutPlanner } from '@/components/ai-workout-planner';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Dumbbell, FileText } from 'lucide-react';
+import { Dumbbell, FileText, Flame } from 'lucide-react';
+import { WorkoutCoursePreview } from '@/components/workout-course-preview';
 
 export default function Home() {
   return (
@@ -17,17 +15,23 @@ export default function Home() {
       <Header />
       <main className="flex-1 p-4 md:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto">
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <Link href="/gym">
               <Button className="w-full h-16 text-lg">
                 <Dumbbell className="ml-4 h-6 w-6" />
-                اذهب إلى صفحة الجيم الخاصة بي
+                اذهب إلى الجيم
+              </Button>
+            </Link>
+             <Link href="/calories">
+              <Button className="w-full h-16 text-lg" variant="secondary">
+                <Flame className="ml-4 h-6 w-6" />
+                تقدير سعرات التمرين
               </Button>
             </Link>
              <Link href="/reports">
               <Button className="w-full h-16 text-lg" variant="outline">
                 <FileText className="ml-4 h-6 w-6" />
-                إنشاء تقرير أداء
+                إنشاء تقرير الأداء
               </Button>
             </Link>
           </div>
@@ -38,14 +42,12 @@ export default function Home() {
 
             <div className="lg:col-span-2 space-y-6 lg:space-y-8">
               <FoodTracker />
-              <AIWorkoutPlanner />
-              <ActivityTracker />
+              <WorkoutCoursePreview />
             </div>
 
             <div className="lg:col-span-1 space-y-6 lg:space-y-8">
               <UserProfile />
               <RecipeGenerator />
-              <HabitTracker />
               <Achievements />
             </div>
           </div>
