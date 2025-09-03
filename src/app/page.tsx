@@ -2,11 +2,10 @@ import { Header } from '@/components/header';
 import { Stats } from '@/components/stats';
 import { FoodTracker } from '@/components/food-tracker';
 import { RecipeGenerator } from '@/components/recipe-generator';
-import { Achievements } from '@/components/achievements';
 import { UserProfile } from '@/components/user-profile';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Dumbbell, FileText, Flame } from 'lucide-react';
+import { Dumbbell, FileText, Flame, Trophy } from 'lucide-react';
 import { WorkoutCoursePreview } from '@/components/workout-course-preview';
 
 export default function Home() {
@@ -15,7 +14,7 @@ export default function Home() {
       <Header />
       <main className="flex-1 p-4 md:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto">
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <Link href="/gym">
               <Button className="w-full h-16 text-lg">
                 <Dumbbell className="ml-4 h-6 w-6" />
@@ -34,6 +33,12 @@ export default function Home() {
                 إنشاء تقرير الأداء
               </Button>
             </Link>
+            <Link href="/achievements">
+              <Button className="w-full h-16 text-lg">
+                <Trophy className="ml-4 h-6 w-6" />
+                الإنجازات
+              </Button>
+            </Link>
           </div>
           <div className="grid gap-6 lg:gap-8 grid-cols-1 lg:grid-cols-3">
             <div className="lg:col-span-3">
@@ -48,7 +53,6 @@ export default function Home() {
             <div className="lg:col-span-1 space-y-6 lg:space-y-8">
               <UserProfile />
               <RecipeGenerator />
-              <Achievements />
             </div>
           </div>
         </div>
