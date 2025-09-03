@@ -1,14 +1,17 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Barcode, PlusCircle, Search, UtensilsCrossed, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 interface Food {
+  id: string;
   name: string;
   calories: number;
   portion: string;
@@ -18,17 +21,60 @@ export function FoodTracker() {
   const [foods, setFoods] = useState<Food[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newFood, setNewFood] = useState({ name: '', calories: '', portion: '' });
+  const { toast } = useToast();
+  
+  const today = format(new Date(), 'yyyy-MM-dd');
+
+  useEffect(() => {
+    try {
+        const storedData = localStorage.getItem(today);
+        if (storedData) {
+            const parsedData = JSON.parse(storedData);
+            if (parsedData.foods && Array.isArray(parsedData.foods)) {
+                setFoods(parsedData.foods);
+            }
+        }
+    } catch (error) {
+        console.error("Failed to parse food data from localStorage", error);
+    }
+  }, [today]);
+
+  const updateLocalStorage = (updatedFoods: Food[]) => {
+     try {
+        const storedData = localStorage.getItem(today);
+        const data = storedData ? JSON.parse(storedData) : {};
+        data.foods = updatedFoods;
+        localStorage.setItem(today, JSON.stringify(data));
+     } catch (error) {
+        console.error("Failed to update localStorage", error);
+        toast({
+            variant: "destructive",
+            title: "خطأ",
+            description: "فشل حفظ بيانات الطعام.",
+        });
+     }
+  };
+
 
   const handleAddFood = () => {
     if (newFood.name && newFood.calories && newFood.portion) {
-      setFoods([...foods, { ...newFood, calories: Number(newFood.calories) }]);
+      const foodToAdd: Food = { 
+          id: crypto.randomUUID(),
+          ...newFood, 
+          calories: Number(newFood.calories) 
+      };
+      const updatedFoods = [...foods, foodToAdd];
+      setFoods(updatedFoods);
+      updateLocalStorage(updatedFoods);
       setNewFood({ name: '', calories: '', portion: '' });
       setIsDialogOpen(false);
     }
   };
   
-  const handleRemoveFood = (index: number) => {
-    setFoods(foods.filter((_, i) => i !== index));
+  const handleRemoveFood = (foodId: string) => {
+    const updatedFoods = foods.filter((food) => food.id !== foodId);
+    setFoods(updatedFoods);
+    updateLocalStorage(updatedFoods);
   };
 
 
@@ -59,8 +105,8 @@ export function FoodTracker() {
               <p className="text-xs">ابدأ بالبحث عن طعام أو مسح باركود.</p>
             </div>
           ) : (
-            foods.map((food, index) => (
-              <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 group">
+            foods.map((food) => (
+              <div key={food.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 group">
                 <div className="flex items-center gap-4">
                   <div className="p-2 bg-background rounded-full border">
                       <UtensilsCrossed className="h-5 w-5 text-primary" />
@@ -74,7 +120,7 @@ export function FoodTracker() {
                    <div className="text-right">
                     <p className="font-semibold">{food.calories} سعر حراري</p>
                   </div>
-                  <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => handleRemoveFood(index)}>
+                  <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => handleRemoveFood(food.id)}>
                     <X className="h-4 w-4" />
                   </Button>
                 </div>

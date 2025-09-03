@@ -12,10 +12,11 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { getWorkoutCaloriesAction, WorkoutState, generateAIPlanAction, AIPlanState } from '@/app/actions';
-import { GenerateWorkoutPlanInput, GenerateWorkoutPlanOutput, AIWorkoutDay, AIExercise } from '@/app/types';
+import { generateAIPlanAction, AIPlanState } from '@/app/actions';
+import { GenerateWorkoutPlanInput, AIWorkoutDay, AIExercise } from '@/app/types';
 import { format } from 'date-fns';
 import { Skeleton } from './ui/skeleton';
+import { estimateWorkoutCalories, WorkoutCalorieEstimationInput, WorkoutCalorieEstimationOutput } from '@/ai/flows/workout-calorie-estimation';
 
 
 const exerciseList = [
@@ -545,7 +546,7 @@ function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset }: { p
         if (!activeDayData) return;
         setIsLoading(true);
 
-        const exercisesToCalculate = activeDayData.exercises
+        const exercisesToCalculate: WorkoutCalorieEstimationInput['exercises'] = activeDayData.exercises
             .map(e => {
                 const exerciseData: any = { name: e.name, type: e.type };
                 
@@ -561,22 +562,20 @@ function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset }: { p
                     if (reps) exerciseData.reps = reps;
                     if (weight) exerciseData.weight = weight;
                 }
-                return Object.keys(exerciseData).length > 2 ? exerciseData : null;
+                // Only return if there is some metric to calculate
+                return (exerciseData.durationInMinutes || (exerciseData.sets && exerciseData.reps)) ? exerciseData : null;
             })
-            .filter(Boolean);
+            .filter((e): e is NonNullable<typeof e> => e !== null);
+
 
         let calculatedCalories = 0;
         if (exercisesToCalculate.length > 0) {
-            const formData = new FormData();
-            formData.append('type', 'full_day');
-            formData.append('exercises', JSON.stringify(exercisesToCalculate));
+            const result: WorkoutCalorieEstimationOutput = await estimateWorkoutCalories({ exercises: exercisesToCalculate });
             
-            const result: WorkoutState = await getWorkoutCaloriesAction({ data: null, error: null, message: null }, formData);
-            
-            if (result.data) {
-                calculatedCalories = result.data.estimatedCalories;
+            if (result.estimatedCalories) {
+                calculatedCalories = result.estimatedCalories;
             } else {
-                console.error("Failed to calculate calories:", result.error);
+                console.error("Failed to calculate calories:", result);
             }
         }
         
@@ -590,11 +589,11 @@ function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset }: { p
             const today = format(new Date(), 'yyyy-MM-dd');
             try {
                 const dayStorage = JSON.parse(localStorage.getItem(today) || '{}');
-                const existingCalories = dayStorage.calories || 0;
-                dayStorage.calories = existingCalories + caloriesResult;
+                const existingCalories = dayStorage.workoutCalories || 0;
+                dayStorage.workoutCalories = existingCalories + caloriesResult;
                 localStorage.setItem(today, JSON.stringify(dayStorage));
             } catch (error) {
-                localStorage.setItem(today, JSON.stringify({ calories: caloriesResult }));
+                localStorage.setItem(today, JSON.stringify({ workoutCalories: caloriesResult }));
             }
         }
         
@@ -763,7 +762,3 @@ export function WorkoutCourse() {
 
     return <CourseRegistration onCourseCreate={setCourseConfig} />;
 }
-
-    
-
-    

@@ -15,7 +15,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card"
-import { getReportAction, ReportState, FitnessReportInput } from "@/app/actions"
+import { getReportAction, ReportState } from "@/app/actions"
+import { FitnessReportInput } from "@/app/types"
 import { useToast } from "@/hooks/use-toast"
 import { Separator } from "./ui/separator"
 
@@ -66,7 +67,9 @@ export function ReportsGenerator({ className }: React.HTMLAttributes<"div">) {
             const storedData = localStorage.getItem(dateString);
             if (storedData) {
                 const parsedData = JSON.parse(storedData);
-                dailyData[dateString] = { calories: parsedData.calories || 0 };
+                const foodCalories = parsedData.foods?.reduce((acc: number, food: any) => acc + (food.calories || 0), 0) || 0;
+                const workoutCalories = parsedData.workoutCalories || 0;
+                dailyData[dateString] = { calories: foodCalories - workoutCalories };
             } else {
                 dailyData[dateString] = { calories: 0 };
             }
@@ -171,7 +174,7 @@ export function ReportsGenerator({ className }: React.HTMLAttributes<"div">) {
                   <ReportIcon section="summary" />
                   <div>
                       <h4 className="font-bold text-lg">ملخص الفترة</h4>
-                      <p className="text-muted-foreground">{state.data.periodSummary}</p>
+                      <p className="text-muted-foreground whitespace-pre-line">{state.data.periodSummary}</p>
                   </div>
               </div>
               <Separator />
@@ -179,14 +182,14 @@ export function ReportsGenerator({ className }: React.HTMLAttributes<"div">) {
                   <ReportIcon section="diet" />
                   <div>
                       <h4 className="font-bold text-lg">تحليل النظام الغذائي</h4>
-                      <p className="text-muted-foreground">{state.data.dietaryAnalysis}</p>
+                      <p className="text-muted-foreground whitespace-pre-line">{state.data.dietaryAnalysis}</p>
                   </div>
               </div>
               <div className="p-4 bg-secondary/50 rounded-lg flex items-start gap-4">
                   <ReportIcon section="workout" />
                   <div>
                       <h4 className="font-bold text-lg">تحليل التمارين</h4>
-                      <p className="text-muted-foreground">{state.data.workoutAnalysis}</p>
+                      <p className="text-muted-foreground whitespace-pre-line">{state.data.workoutAnalysis}</p>
                   </div>
               </div>
                <Separator />
@@ -194,7 +197,7 @@ export function ReportsGenerator({ className }: React.HTMLAttributes<"div">) {
                   <ReportIcon section="results" />
                   <div>
                       <h4 className="font-bold text-lg text-accent-foreground">النتائج التقديرية</h4>
-                      <p className="text-accent-foreground/90">{state.data.estimatedResults}</p>
+                      <p className="text-accent-foreground/90 whitespace-pre-line">{state.data.estimatedResults}</p>
                   </div>
               </div>
                <Separator />
@@ -202,7 +205,7 @@ export function ReportsGenerator({ className }: React.HTMLAttributes<"div">) {
                   <ReportIcon section="recommendations" />
                   <div>
                       <h4 className="font-bold text-lg">التوصيات</h4>
-                      <p className="text-muted-foreground">{state.data.recommendations}</p>
+                      <p className="text-muted-foreground whitespace-pre-line">{state.data.recommendations}</p>
                   </div>
               </div>
           </CardContent>

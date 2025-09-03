@@ -29,6 +29,7 @@ interface DailyData {
 
 export function Stats() {
   const [chartData, setChartData] = useState<DailyData[]>([]);
+  const [streak, setStreak] = useState(0);
   
   useEffect(() => {
     // This effect runs only on the client side
@@ -41,12 +42,15 @@ export function Stats() {
         const date = subDays(today, i);
         const dateString = format(date, 'yyyy-MM-dd');
         const storedData = localStorage.getItem(dateString);
-        let dayCalories = 0;
+        let netCalories = 0;
         
         if (storedData) {
             const parsedData = JSON.parse(storedData);
-            dayCalories = parsedData.calories || 0;
-            if(dayCalories > 0) {
+            const foodCalories = parsedData.foods?.reduce((acc: number, food: any) => acc + food.calories, 0) || 0;
+            const workoutCalories = parsedData.workoutCalories || 0;
+            netCalories = foodCalories - workoutCalories;
+
+            if (foodCalories > 0 || workoutCalories > 0) {
               consecutiveDays++;
             } else {
               consecutiveDays = 0;
@@ -54,14 +58,14 @@ export function Stats() {
         } else {
           consecutiveDays = 0;
         }
-
+        
         if(consecutiveDays > currentStreak) {
             currentStreak = consecutiveDays;
         }
 
         weekData.push({
             date: format(date, 'eeee', { locale: arSA }), // 'الأحد', 'الاثنين', etc.
-            calories: dayCalories,
+            calories: netCalories,
             steps: 0, // Placeholder for now
         });
     }
@@ -69,7 +73,8 @@ export function Stats() {
     const todayString = format(today, 'yyyy-MM-dd');
     const storedToday = localStorage.getItem(todayString);
     if(storedToday) {
-        if(JSON.parse(storedToday).calories === 0) {
+        const parsedData = JSON.parse(storedToday);
+        if((parsedData.foods?.length || 0) === 0 && (parsedData.workoutCalories || 0) === 0) {
             consecutiveDays = 0;
         }
     } else {
@@ -89,7 +94,6 @@ export function Stats() {
   const totalCalories = chartData.reduce((acc, curr) => acc + curr.calories, 0);
   const totalSteps = chartData.reduce((acc, curr) => acc + curr.steps, 0);
   const points = Math.floor(totalCalories / 10 + totalSteps / 100);
-  const [streak, setStreak] = useState(0);
 
   return (
     <Card className="shadow-sm">
@@ -102,7 +106,7 @@ export function Stats() {
             <div className="flex flex-col items-center justify-center gap-1 p-4 rounded-lg bg-secondary/50">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Flame className="size-5" />
-                <span className="font-semibold">إجمالي السعرات</span>
+                <span className="font-semibold">صافي السعرات</span>
               </div>
               <span className="text-2xl font-bold font-mono">{totalCalories.toLocaleString()}</span>
             </div>
