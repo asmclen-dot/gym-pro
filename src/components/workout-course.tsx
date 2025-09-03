@@ -144,7 +144,7 @@ function WorkoutPlanSetup({ config, existingPlan, onSave, onCancel }: { config: 
     const [workoutDays, setWorkoutDays] = useState<WorkoutDay[]>(
         existingPlan || Array.from({ length: config.daysPerWeek }, (_, i) => ({
             day: i + 1,
-            targetTime: '',
+            targetTime: 'morning',
             exercises: [],
         }))
     );
@@ -231,7 +231,7 @@ function WorkoutPlanSetup({ config, existingPlan, onSave, onCancel }: { config: 
         setIsPopoverOpen(false);
     }
     
-    const handleTargetTimeChange = (dayNumber: number, time: WorkoutDay['targetTime']) => {
+    const handleTargetTimeChange = (dayNumber: number, time: AIWorkoutDay['targetTime']) => {
         setWorkoutDays(currentDays =>
             currentDays.map(day =>
                 day.day === dayNumber
@@ -269,7 +269,7 @@ function WorkoutPlanSetup({ config, existingPlan, onSave, onCancel }: { config: 
                                 <AccordionContent className="space-y-4 pt-4">
                                      <div className="space-y-2 max-w-[200px]">
                                         <Label>وقت التمرين</Label>
-                                        <Select onValueChange={(value) => handleTargetTimeChange(day, value as WorkoutDay['targetTime'])} value={targetTime || undefined}>
+                                        <Select onValueChange={(value) => handleTargetTimeChange(day, value as AIWorkoutDay['targetTime'])} value={targetTime || undefined}>
                                             <SelectTrigger className="h-9 text-sm">
                                                 <SelectValue placeholder="حدد الوقت" />
                                             </SelectTrigger>
@@ -543,28 +543,34 @@ function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset }: { p
         if (!activeDayData) return;
         setIsLoading(true);
 
-        const exercisesToCalculate = activeDayData.exercises.map(e => {
-            const exerciseData: any = { name: e.name, type: e.type };
-            const duration = getNumericValue(e.actualDuration) ?? getNumericValue(e.targetDuration);
-            const sets = getNumericValue(e.actualSets) ?? getNumericValue(e.targetSets);
-            const reps = getNumericValue(e.actualReps) ?? getNumericValue(e.targetReps);
-            const weight = getNumericValue(e.actualWeight) ?? getNumericValue(e.targetWeight);
+        const exercisesToCalculate = activeDayData.exercises
+            .map(e => {
+                const exerciseData: any = { name: e.name, type: e.type };
+                
+                const duration = getNumericValue(e.actualDuration) ?? getNumericValue(e.targetDuration);
+                const sets = getNumericValue(e.actualSets) ?? getNumericValue(e.targetSets);
+                const reps = getNumericValue(e.actualReps) ?? getNumericValue(e.targetReps);
+                const weight = getNumericValue(e.actualWeight) ?? getNumericValue(e.targetWeight);
 
-            if (e.type !== 'strength') {
-                if (duration) exerciseData.durationInMinutes = duration;
-            } else {
-                if (sets) exerciseData.sets = sets;
-                if (reps) exerciseData.reps = reps;
-                if (weight) exerciseData.weight = weight;
-            }
-            return Object.keys(exerciseData).length > 2 ? exerciseData : null;
-        }).filter(Boolean);
+                if (e.type !== 'strength') {
+                    if (duration) exerciseData.durationInMinutes = duration;
+                } else {
+                    if (sets) exerciseData.sets = sets;
+                    if (reps) exerciseData.reps = reps;
+                    if (weight) exerciseData.weight = weight;
+                }
+                // Only include if it has more than name and type
+                return Object.keys(exerciseData).length > 2 ? exerciseData : null;
+            })
+            .filter(Boolean); // remove nulls
 
         if (exercisesToCalculate.length > 0) {
             const formData = new FormData();
             formData.append('type', 'full_day');
             formData.append('exercises', JSON.stringify(exercisesToCalculate));
+            
             const result: WorkoutState = await getWorkoutCaloriesAction({ data: null, error: null, message: null }, formData);
+            
             if (result.data) {
                 const calculatedCalories = result.data.estimatedCalories;
                 const today = format(new Date(), 'yyyy-MM-dd');
@@ -574,13 +580,16 @@ function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset }: { p
                     dayStorage.calories = existingCalories + calculatedCalories;
                     localStorage.setItem(today, JSON.stringify(dayStorage));
                 } catch (error) {
+                    // If parsing fails, just overwrite
                     localStorage.setItem(today, JSON.stringify({ calories: calculatedCalories }));
                 }
             } else {
-                console.error(result.error);
+                // Handle error case, maybe log it
+                console.error("Failed to calculate calories:", result.error);
             }
         }
         
+        // Move to next day
         onProgressChange({ ...progress, currentDay: currentDay + 1 });
         setIsLoading(false);
     };
@@ -719,3 +728,5 @@ export function WorkoutCourse() {
 
     return <CourseRegistration onCourseCreate={setCourseConfig} />;
 }
+
+    
