@@ -11,13 +11,16 @@ export const AIExerciseSchema = z.object({
     targetWeight: z.number().optional().describe("The suggested starting weight for the exercise in kilograms. Only for 'strength' type."),
     done: z.boolean().optional().default(false).describe("Whether the exercise has been completed."),
 });
+export type AIExercise = z.infer<typeof AIExerciseSchema>;
 
 // Schema for a single day in the AI-generated workout plan
 export const AIWorkoutDaySchema = z.object({
     day: z.number().describe("The day number of the workout, e.g., 1, 2, 3."),
-    targetTime: z.enum(['morning', 'afternoon', 'evening', '']).describe("The target time of day for the workout."),
+    targetTime: z.enum(['morning', 'afternoon', 'evening']).optional().describe("The target time of day for the workout."),
     exercises: z.array(AIExerciseSchema).describe("A list of exercises for this specific day."),
 });
+export type AIWorkoutDay = z.infer<typeof AIWorkoutDaySchema>;
+
 
 // Input schema for the workout plan generation flow
 export const GenerateWorkoutPlanInputSchema = z.object({
