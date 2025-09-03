@@ -1,10 +1,10 @@
 "use client"
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Flame, Footprints, Target, TrendingUp, Zap } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Flame, Footprints, Target, Zap } from 'lucide-react';
 import React from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { cn } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 const chartData = [
   { day: "الاثنين", calories: 800, steps: 5000 },
@@ -28,8 +28,6 @@ const chartConfig = {
 }
 
 export function Stats() {
-  const [activeChart, setActiveChart] = React.useState<"calories" | "steps">("calories");
-
   const totalCalories = chartData.reduce((acc, curr) => acc + curr.calories, 0);
   const totalSteps = chartData.reduce((acc, curr) => acc + curr.steps, 0);
   const points = Math.floor(totalCalories / 10 + totalSteps / 100);
@@ -39,6 +37,7 @@ export function Stats() {
     <Card className="shadow-sm">
       <CardHeader>
         <CardTitle className="font-headline tracking-tight">ملخص الأسبوع</CardTitle>
+        <CardDescription>تتبع تقدمك خلال الأسبوع.</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 text-center">
@@ -72,22 +71,44 @@ export function Stats() {
             </div>
         </div>
 
-        <div className="h-[250px] w-full">
-            <ChartContainer config={chartConfig} className="w-full h-full">
-              <BarChart data={chartData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                <XAxis dataKey="day" tickLine={false} axisLine={false} tickMargin={8} />
-                <YAxis tickLine={false} axisLine={false} tickMargin={8} width={80} />
-                <ChartTooltip
-                  cursor={false}
-                  content={<ChartTooltipContent indicator="dot" />}
-                />
-                <Bar dataKey="calories" fill="var(--color-calories)" radius={4} />
-                <Bar dataKey="steps" fill="var(--color-steps)" radius={4} />
-              </BarChart>
-            </ChartContainer>
-        </div>
-
+        <Tabs defaultValue="calories" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="calories">السعرات الحرارية</TabsTrigger>
+            <TabsTrigger value="steps">الخطوات</TabsTrigger>
+          </TabsList>
+          <TabsContent value="calories">
+            <div className="h-[250px] w-full pt-4">
+              <ChartContainer config={chartConfig} className="w-full h-full">
+                <BarChart data={chartData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                  <XAxis dataKey="day" tickLine={false} axisLine={false} tickMargin={8} />
+                  <YAxis tickLine={false} axisLine={false} tickMargin={8} width={80} />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent indicator="dot" />}
+                  />
+                  <Bar dataKey="calories" fill="var(--color-calories)" radius={4} />
+                </BarChart>
+              </ChartContainer>
+            </div>
+          </TabsContent>
+          <TabsContent value="steps">
+            <div className="h-[250px] w-full pt-4">
+              <ChartContainer config={chartConfig} className="w-full h-full">
+                <BarChart data={chartData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                  <XAxis dataKey="day" tickLine={false} axisLine={false} tickMargin={8} />
+                  <YAxis tickLine={false} axisLine={false} tickMargin={8} width={80} />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent indicator="dot" />}
+                  />
+                  <Bar dataKey="steps" fill="var(--color-steps)" radius={4} />
+                </BarChart>
+              </ChartContainer>
+            </div>
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
