@@ -228,7 +228,7 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
                                                             </p>
                                                         </div>
                                                     </div>
-                                                    <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 opacity-0 group-hover:opacity-100" onClick={()={() => handleRemoveExercise(day, index)}>
+                                                    <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => handleRemoveExercise(day, index)}>
                                                         <Trash2 className="h-4 w-4 text-destructive" />
                                                     </Button>
                                                 </div>
@@ -432,7 +432,7 @@ export function WorkoutCourse() {
             setCourseConfig({
                 daysPerWeek: savedPlan.length,
                 // A simple logic to determine workoutType, can be improved
-                workoutType: savedPlan[0]?.exercises[0]?.type || 'mixed',
+                workoutType: savedPlan.some(d => d.exercises.some(e => e.type === 'strength')) && savedPlan.some(d => d.exercises.some(e => e.type === 'cardio')) ? 'mixed' : (savedPlan[0]?.exercises[0]?.type || 'mixed'),
             });
             setSavedPlan(null);
         }
@@ -448,5 +448,3 @@ export function WorkoutCourse() {
 
     return <CourseRegistration onCourseCreate={setCourseConfig} />;
 }
-
-    
