@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -430,15 +431,24 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
             return;
         }
 
-        const exercisesToCalculate = dayData.exercises.map(e => ({
-            name: e.name,
-            type: e.type,
-            // Send actual performance if available, otherwise fall back to target
-            durationInMinutes: e.actualDuration ?? e.targetDuration,
-            sets: e.actualSets ?? e.targetSets,
-            reps: e.actualReps ?? e.targetReps,
-            weight: e.actualWeight ?? e.targetWeight,
-        }));
+        const exercisesToCalculate = dayData.exercises.map(e => {
+             const exerciseData: any = {
+                name: e.name,
+                type: e.type,
+            };
+
+            const duration = e.actualDuration ?? e.targetDuration;
+            const sets = e.actualSets ?? e.targetSets;
+            const reps = e.actualReps ?? e.targetReps;
+            const weight = e.actualWeight ?? e.targetWeight;
+
+            if (duration) exerciseData.durationInMinutes = Number(duration);
+            if (sets) exerciseData.sets = Number(sets);
+            if (reps) exerciseData.reps = Number(reps);
+            if (weight) exerciseData.weight = Number(weight);
+            
+            return exerciseData;
+        });
         
         const formData = new FormData();
         formData.append('type', 'full_day');
@@ -521,20 +531,20 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
                                                     {ex.type === 'strength' && (
                                                         <>
                                                             <Weight className="h-4 w-4 text-muted-foreground" />
-                                                            <Input type='number' placeholder={`${ex.targetWeight} كغ`} className='h-8 w-24 text-sm'
+                                                            <Input type='number' placeholder={`${ex.targetWeight || 0} كغ`} className='h-8 w-24 text-sm'
                                                               onChange={(e) => handlePerformanceChange(day, ex.id, 'actualWeight', e.target.value)} />
                                                             <Repeat className="h-4 w-4 text-muted-foreground" />
-                                                             <Input type='number' placeholder={`${ex.targetSets}`} className='h-8 w-16 text-sm'
+                                                             <Input type='number' placeholder={`${ex.targetSets || 0}`} className='h-8 w-16 text-sm'
                                                               onChange={(e) => handlePerformanceChange(day, ex.id, 'actualSets', e.target.value)} />
                                                             <span className='text-muted-foreground'>x</span>
-                                                            <Input type='number' placeholder={`${ex.targetReps}`} className='h-8 w-16 text-sm'
+                                                            <Input type='number' placeholder={`${ex.targetReps || 0}`} className='h-8 w-16 text-sm'
                                                               onChange={(e) => handlePerformanceChange(day, ex.id, 'actualReps', e.target.value)} />
                                                         </>
                                                     )}
                                                     {(ex.type === 'cardio' || ex.type === 'flexibility') && (
                                                          <>
                                                             <Clock className="h-4 w-4 text-muted-foreground" />
-                                                            <Input type='number' placeholder={`${ex.targetDuration} دقيقة`} className='h-8 w-28 text-sm'
+                                                            <Input type='number' placeholder={`${ex.targetDuration || 0} دقيقة`} className='h-8 w-28 text-sm'
                                                               onChange={(e) => handlePerformanceChange(day, ex.id, 'actualDuration', e.target.value)} />
                                                         </>
                                                     )}
@@ -604,3 +614,5 @@ export function WorkoutCourse() {
 
     return <CourseRegistration onCourseCreate={setCourseConfig} />;
 }
+
+    
