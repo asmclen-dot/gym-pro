@@ -5,7 +5,7 @@ import { RecipeGenerator } from '@/components/recipe-generator';
 import { UserProfile } from '@/components/user-profile';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Dumbbell, FileText, Flame, Trophy } from 'lucide-react';
+import { Dumbbell, FileText, Flame, Trophy, Camera } from 'lucide-react';
 import { WorkoutCoursePreview } from '@/components/workout-course-preview';
 
 export default function Home() {
@@ -14,7 +14,7 @@ export default function Home() {
       <Header />
       <main className="flex-1 p-4 md:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto">
-           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
             <Link href="/gym">
               <Button className="w-full h-16 text-lg">
                 <Dumbbell className="ml-4 h-6 w-6" />
@@ -37,6 +37,12 @@ export default function Home() {
               <Button className="w-full h-16 text-lg">
                 <Trophy className="ml-4 h-6 w-6" />
                 الإنجازات
+              </Button>
+            </Link>
+            <Link href="/journey">
+              <Button className="w-full h-16 text-lg" variant="secondary">
+                <Camera className="ml-4 h-6 w-6" />
+                رحلة جسمي
               </Button>
             </Link>
           </div>
