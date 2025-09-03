@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dumbbell, Heart, Combine, PlusCircle, Trash2, CheckSquare, Edit, BrainCircuit, Droplets, Clock, Weight, Repeat, Flame, Loader2, RefreshCw } from 'lucide-react';
+import { Dumbbell, Heart, Combine, PlusCircle, Trash2, CheckSquare, Edit, BrainCircuit, Droplets, Clock, Weight, Repeat, Flame, Loader2, RefreshCw, PartyPopper, CheckCircle2 } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
@@ -61,6 +61,11 @@ interface Exercise extends AIExercise {
 
 interface WorkoutDay extends AIWorkoutDay {
     exercises: Exercise[];
+}
+
+interface SavedProgress {
+    plan: WorkoutDay[];
+    currentDay: number;
 }
 
 
@@ -424,19 +429,98 @@ function WorkoutPlanSetup({ config, existingPlan, onSave, onCancel }: { config: 
     )
 }
 
-function WorkoutPlanDisplay({ plan: initialPlan, onEdit, onReset }: { plan: WorkoutDay[], onEdit: () => void, onReset: () => void }) {
-    const [plan, setPlan] = useState<WorkoutDay[]>(initialPlan);
-    const [dailyCalories, setDailyCalories] = useState<Record<number, number | null>>({});
-    const [loadingDay, setLoadingDay] = useState<number | null>(null);
+function WorkoutDayDisplay({ day, onPerformanceChange, onComplete, isLoading }: { day: WorkoutDay, onPerformanceChange: (exerciseId: string, field: keyof Exercise, value: string | number | boolean) => void, onComplete: () => void, isLoading: boolean }) {
+    const allExercisesDone = day.exercises.length > 0 && day.exercises.every(ex => ex.done);
 
-    useEffect(() => {
-        // When initial plan changes (e.g. from parent), update the state
-        setPlan(initialPlan);
-    }, [initialPlan]);
+    return (
+        <CardContent className="space-y-4 pt-4">
+            {day.targetTime && <div className='text-sm font-semibold text-muted-foreground bg-muted px-2 py-1 rounded-md max-w-fit'>{day.targetTime === 'morning' ? 'صباحًا' : day.targetTime === 'afternoon' ? 'ظهرًا' : 'مساءً'}</div>}
+            {day.exercises.length === 0 ? (
+                <div className="text-center text-muted-foreground p-4 border rounded-lg">
+                    <p>لا توجد تمارين لهذا اليوم.</p>
+                </div>
+            ) : (
+                <div className="space-y-3">
+                    {day.exercises.map((ex) => (
+                         <div key={ex.id} className="flex flex-col p-3 rounded-lg bg-secondary/50 gap-3">
+                            <div className="flex items-start justify-between">
+                                <div className='flex items-center gap-3'>
+                                     <div className={cn("p-2 rounded-full", 
+                                      ex.type === 'strength' ? 'bg-primary/20' : 
+                                      ex.type === 'cardio' ? 'bg-destructive/20' : 'bg-accent/80'
+                                    )}>
+                                        {ex.type === 'strength' && <Dumbbell className="h-5 w-5 text-primary" />}
+                                        {ex.type === 'cardio' && <Heart className="h-5 w-5 text-destructive" />}
+                                        {ex.type === 'flexibility' && <Droplets className="h-5 w-5 text-accent-foreground" />}
+                                    </div>
+                                    <div>
+                                        <p className="font-bold">{ex.name}</p>
+                                        <p className="text-sm text-muted-foreground">
+                                            {ex.type === 'strength' && `الهدف: ${ex.targetSets || 0} مجموعات × ${ex.targetReps || 0} عدات @ ${ex.targetWeight || 0}كغ`}
+                                            {(ex.type === 'cardio' || ex.type === 'flexibility') && `الهدف: ${ex.targetDuration || 0} دقيقة`}
+                                        </p>
+                                    </div>
+                                </div>
+                                 <div className="flex items-center gap-2">
+                                    <Label htmlFor={`ex-done-${ex.id}`} className='cursor-pointer text-sm font-semibold'>تم</Label>
+                                    <input type='checkbox' id={`ex-done-${ex.id}`} className='h-5 w-5 accent-primary' 
+                                      checked={!!ex.done}
+                                      onChange={(e) => onPerformanceChange(ex.id, 'done', e.target.checked)}
+                                    />
+                                </div>
+                            </div>
+                            {/* Daily Performance Logging */}
+                            <div className='flex flex-wrap items-center gap-2 pl-12'>
+                                <p className='text-sm font-semibold'>الأداء الفعلي:</p>
+                                {ex.type === 'strength' && (
+                                    <>
+                                        <Weight className="h-4 w-4 text-muted-foreground" />
+                                        <Input type='number' placeholder={`${ex.targetWeight || 0} كغ`} className='h-8 w-24 text-sm'
+                                          value={ex.actualWeight || ''}
+                                          onChange={(e) => onPerformanceChange(ex.id, 'actualWeight', e.target.value)} />
+                                        <Repeat className="h-4 w-4 text-muted-foreground" />
+                                         <Input type='number' placeholder={`${ex.targetSets || 0}`} className='h-8 w-16 text-sm'
+                                          value={ex.actualSets || ''}
+                                          onChange={(e) => onPerformanceChange(ex.id, 'actualSets', e.target.value)} />
+                                        <span className='text-muted-foreground'>x</span>
+                                        <Input type='number' placeholder={`${ex.targetReps || 0}`} className='h-8 w-16 text-sm'
+                                          value={ex.actualReps || ''}
+                                          onChange={(e) => onPerformanceChange(ex.id, 'actualReps', e.target.value)} />
+                                    </>
+                                )}
+                                {(ex.type === 'cardio' || ex.type === 'flexibility') && (
+                                     <>
+                                        <Clock className="h-4 w-4 text-muted-foreground" />
+                                        <Input type='number' placeholder={`${ex.targetDuration || 0} دقيقة`} className='h-8 w-28 text-sm'
+                                          value={ex.actualDuration || ''}
+                                          onChange={(e) => onPerformanceChange(ex.id, 'actualDuration', e.target.value)} />
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                    <div className='flex justify-between items-center pt-4'>
+                         <Button onClick={onComplete} disabled={isLoading || !allExercisesDone}>
+                            {isLoading ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className='ml-2 h-4 w-4'/>}
+                            {isLoading ? 'جارٍ الحفظ...' : 'إكمال اليوم والانتقال للتالي'}
+                        </Button>
+                    </div>
+                </div>
+            )}
+        </CardContent>
+    );
+}
 
-    const handlePerformanceChange = (dayNumber: number, exerciseId: string, field: keyof Exercise, value: string | number | boolean) => {
+function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset }: { progress: SavedProgress, onProgressChange: (newProgress: SavedProgress) => void, onEdit: () => void, onReset: () => void }) {
+    const { plan, currentDay } = progress;
+    const [isLoading, setIsLoading] = useState(false);
+
+    const activeDayData = plan.find(d => d.day === currentDay);
+    const isCourseFinished = !activeDayData;
+
+    const handlePerformanceChange = (exerciseId: string, field: keyof Exercise, value: string | number | boolean) => {
         const updatedPlan = plan.map(day => {
-            if (day.day === dayNumber) {
+            if (day.day === currentDay) {
                 return {
                     ...day,
                     exercises: day.exercises.map(ex =>
@@ -446,30 +530,21 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit, onReset }: { plan: Work
             }
             return day;
         });
-        setPlan(updatedPlan);
-        localStorage.setItem('workoutPlan', JSON.stringify(updatedPlan));
+        onProgressChange({ ...progress, plan: updatedPlan });
     };
-    
+
     const getNumericValue = (value: string | number | undefined | null): number | undefined => {
         if (value === undefined || value === null || value === '') return undefined;
         const num = Number(value);
         return isNaN(num) || num <= 0 ? undefined : num;
     };
+    
+    const handleCompleteDay = async () => {
+        if (!activeDayData) return;
+        setIsLoading(true);
 
-    const handleCalculate = async (dayNumber: number) => {
-        setLoadingDay(dayNumber);
-        const dayData = plan.find(d => d.day === dayNumber);
-        if (!dayData) {
-            setLoadingDay(null);
-            return;
-        }
-
-        const exercisesToCalculate = dayData.exercises.map(e => {
-            const exerciseData: any = {
-                name: e.name,
-                type: e.type,
-            };
-
+        const exercisesToCalculate = activeDayData.exercises.map(e => {
+            const exerciseData: any = { name: e.name, type: e.type };
             const duration = getNumericValue(e.actualDuration) ?? getNumericValue(e.targetDuration);
             const sets = getNumericValue(e.actualSets) ?? getNumericValue(e.targetSets);
             const reps = getNumericValue(e.actualReps) ?? getNumericValue(e.targetReps);
@@ -482,52 +557,59 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit, onReset }: { plan: Work
                 if (reps) exerciseData.reps = reps;
                 if (weight) exerciseData.weight = weight;
             }
-            
-            if (Object.keys(exerciseData).length > 2) {
-                return exerciseData;
-            }
-            return null;
+            return Object.keys(exerciseData).length > 2 ? exerciseData : null;
         }).filter(Boolean);
-        
-        if (exercisesToCalculate.length === 0) {
-            console.error("No valid exercise data to calculate.");
-            setLoadingDay(null);
-            return;
-        }
 
-        const formData = new FormData();
-        formData.append('type', 'full_day');
-        formData.append('exercises', JSON.stringify(exercisesToCalculate));
-        
-        const result: WorkoutState = await getWorkoutCaloriesAction({ data: null, error: null, message: null }, formData);
-        
-        if (result.data) {
-            const calculatedCalories = result.data.estimatedCalories;
-            setDailyCalories(prev => ({ ...prev, [dayNumber]: calculatedCalories }));
-
-            const today = format(new Date(), 'yyyy-MM-dd');
-            try {
-                const dayStorage = JSON.parse(localStorage.getItem(today) || '{}');
-                const existingCalories = dayStorage.calories || 0;
-                const updatedCalories = existingCalories + calculatedCalories;
-                dayStorage.calories = updatedCalories;
-                localStorage.setItem(today, JSON.stringify(dayStorage));
-            } catch (error) {
-                 localStorage.setItem(today, JSON.stringify({ calories: calculatedCalories }));
+        if (exercisesToCalculate.length > 0) {
+            const formData = new FormData();
+            formData.append('type', 'full_day');
+            formData.append('exercises', JSON.stringify(exercisesToCalculate));
+            const result: WorkoutState = await getWorkoutCaloriesAction({ data: null, error: null, message: null }, formData);
+            if (result.data) {
+                const calculatedCalories = result.data.estimatedCalories;
+                const today = format(new Date(), 'yyyy-MM-dd');
+                try {
+                    const dayStorage = JSON.parse(localStorage.getItem(today) || '{}');
+                    const existingCalories = dayStorage.calories || 0;
+                    dayStorage.calories = existingCalories + calculatedCalories;
+                    localStorage.setItem(today, JSON.stringify(dayStorage));
+                } catch (error) {
+                    localStorage.setItem(today, JSON.stringify({ calories: calculatedCalories }));
+                }
+            } else {
+                console.error(result.error);
             }
-        } else {
-            console.error(result.error);
-            setDailyCalories(prev => ({ ...prev, [dayNumber]: -1 })); // Use -1 to indicate an error
         }
-        setLoadingDay(null);
+        
+        onProgressChange({ ...progress, currentDay: currentDay + 1 });
+        setIsLoading(false);
     };
-    
+
+    if (isCourseFinished) {
+        return (
+            <Card>
+                <CardHeader>
+                    <CardTitle className="font-headline text-2xl tracking-tight">تهانينا!</CardTitle>
+                    <CardDescription>لقد أكملت جميع أيام الكورس بنجاح.</CardDescription>
+                </CardHeader>
+                <CardContent className='flex flex-col items-center justify-center text-center gap-4 py-10'>
+                    <PartyPopper className='h-20 w-20 text-primary animate-pulse' />
+                    <p className='text-lg font-semibold'>لقد قمت بعمل رائع! استمر في التقدم.</p>
+                    <Button onClick={onReset} size='lg'>
+                        <RefreshCw className='ml-2 h-5 w-5' />
+                        بدء كورس جديد
+                    </Button>
+                </CardContent>
+            </Card>
+        )
+    }
+
     return (
         <Card>
             <CardHeader className='flex-row items-center justify-between'>
                 <div>
-                    <CardTitle className="font-headline text-2xl tracking-tight">كورس التمرين الحالي</CardTitle>
-                    <CardDescription>هذه هي خطتك التدريبية المحفوظة. بالتوفيق!</CardDescription>
+                    <CardTitle className="font-headline text-2xl tracking-tight">يوم التمرين {currentDay} من {plan.length}</CardTitle>
+                    <CardDescription>هذا هو تركيزك لليوم. بالتوفيق!</CardDescription>
                 </div>
                  <div className="flex gap-2">
                     <Button variant="outline" size="icon" onClick={onEdit}>
@@ -540,100 +622,7 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit, onReset }: { plan: Work
                     </Button>
                 </div>
             </CardHeader>
-            <CardContent>
-                <Accordion type="multiple" defaultValue={['day-1']} className="w-full">
-                    {plan.map(({ day, exercises, targetTime }) => {
-                        const allExercisesDone = exercises.length > 0 && exercises.every(ex => ex.done);
-
-                        return (
-                        <AccordionItem value={`day-${day}`} key={day}>
-                            <AccordionTrigger className="text-lg font-semibold">
-                                 <div className='flex items-center justify-between w-full pr-2'>
-                                    <span>يوم التمرين {day}</span>
-                                </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="space-y-4 pt-4">
-                                {targetTime && <div className='text-sm font-semibold text-muted-foreground bg-muted px-2 py-1 rounded-md max-w-fit'>{targetTime === 'morning' ? 'صباحًا' : targetTime === 'afternoon' ? 'ظهرًا' : 'مساءً'}</div>}
-                                {exercises.length === 0 ? (
-                                    <div className="text-center text-muted-foreground p-4 border rounded-lg">
-                                        <p>لا توجد تمارين لهذا اليوم.</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-3">
-                                        {exercises.map((ex) => (
-                                             <div key={ex.id} className="flex flex-col p-3 rounded-lg bg-secondary/50 gap-3">
-                                                <div className="flex items-start justify-between">
-                                                    <div className='flex items-center gap-3'>
-                                                         <div className={cn("p-2 rounded-full", 
-                                                          ex.type === 'strength' ? 'bg-primary/20' : 
-                                                          ex.type === 'cardio' ? 'bg-destructive/20' : 'bg-accent/80'
-                                                        )}>
-                                                            {ex.type === 'strength' && <Dumbbell className="h-5 w-5 text-primary" />}
-                                                            {ex.type === 'cardio' && <Heart className="h-5 w-5 text-destructive" />}
-                                                            {ex.type === 'flexibility' && <Droplets className="h-5 w-5 text-accent-foreground" />}
-                                                        </div>
-                                                        <div>
-                                                            <p className="font-bold">{ex.name}</p>
-                                                            <p className="text-sm text-muted-foreground">
-                                                                {ex.type === 'strength' && `الهدف: ${ex.targetSets || 0} مجموعات × ${ex.targetReps || 0} عدات @ ${ex.targetWeight || 0}كغ`}
-                                                                {(ex.type === 'cardio' || ex.type === 'flexibility') && `الهدف: ${ex.targetDuration || 0} دقيقة`}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                     <div className="flex items-center gap-2">
-                                                        <Label htmlFor={`ex-done-${ex.id}`} className='cursor-pointer text-sm font-semibold'>تم</Label>
-                                                        <input type='checkbox' id={`ex-done-${ex.id}`} className='h-5 w-5 accent-primary' 
-                                                          checked={!!ex.done}
-                                                          onChange={(e) => handlePerformanceChange(day, ex.id, 'done', e.target.checked)}
-                                                        />
-                                                    </div>
-                                                </div>
-                                                {/* Daily Performance Logging */}
-                                                <div className='flex flex-wrap items-center gap-2 pl-12'>
-                                                    <p className='text-sm font-semibold'>الأداء الفعلي:</p>
-                                                    {ex.type === 'strength' && (
-                                                        <>
-                                                            <Weight className="h-4 w-4 text-muted-foreground" />
-                                                            <Input type='number' placeholder={`${ex.targetWeight || 0} كغ`} className='h-8 w-24 text-sm'
-                                                              onChange={(e) => handlePerformanceChange(day, ex.id, 'actualWeight', e.target.value)} />
-                                                            <Repeat className="h-4 w-4 text-muted-foreground" />
-                                                             <Input type='number' placeholder={`${ex.targetSets || 0}`} className='h-8 w-16 text-sm'
-                                                              onChange={(e) => handlePerformanceChange(day, ex.id, 'actualSets', e.target.value)} />
-                                                            <span className='text-muted-foreground'>x</span>
-                                                            <Input type='number' placeholder={`${ex.targetReps || 0}`} className='h-8 w-16 text-sm'
-                                                              onChange={(e) => handlePerformanceChange(day, ex.id, 'actualReps', e.target.value)} />
-                                                        </>
-                                                    )}
-                                                    {(ex.type === 'cardio' || ex.type === 'flexibility') && (
-                                                         <>
-                                                            <Clock className="h-4 w-4 text-muted-foreground" />
-                                                            <Input type='number' placeholder={`${ex.targetDuration || 0} دقيقة`} className='h-8 w-28 text-sm'
-                                                              onChange={(e) => handlePerformanceChange(day, ex.id, 'actualDuration', e.target.value)} />
-                                                        </>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
-                                        <div className='flex justify-between items-center pt-4'>
-                                             <Button onClick={() => handleCalculate(day)} disabled={loadingDay === day || !allExercisesDone}>
-                                                {loadingDay === day ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Flame className='ml-2 h-4 w-4'/>}
-                                                {loadingDay === day ? 'جارٍ الحساب...' : 'حساب سعرات اليوم'}
-                                            </Button>
-                                            {dailyCalories[day] != null && dailyCalories[day]! > 0 && (
-                                                <p className='font-bold text-lg text-primary'>{dailyCalories[day]} سعر حراري</p>
-                                            )}
-                                            {dailyCalories[day] === -1 && (
-                                                <p className='font-bold text-sm text-destructive'>فشل الحساب</p>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-                            </AccordionContent>
-                        </AccordionItem>
-                        );
-                    })}
-                </Accordion>
-            </CardContent>
+            {activeDayData && <WorkoutDayDisplay day={activeDayData} onPerformanceChange={handlePerformanceChange} onComplete={handleCompleteDay} isLoading={isLoading} />}
         </Card>
     );
 }
@@ -658,19 +647,18 @@ function LoadingSkeleton() {
 
 export function WorkoutCourse() {
     const [courseConfig, setCourseConfig] = useState<CourseConfig | null>(null);
-    const [savedPlan, setSavedPlan] = useState<WorkoutDay[] | null>(null);
+    const [savedProgress, setSavedProgress] = useState<SavedProgress | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-
 
     useEffect(() => {
         try {
-            const storedPlan = localStorage.getItem('workoutPlan');
-            if (storedPlan) {
-                setSavedPlan(JSON.parse(storedPlan));
+            const storedProgress = localStorage.getItem('workoutProgress');
+            if (storedProgress) {
+                setSavedProgress(JSON.parse(storedProgress));
             }
         } catch (error) {
-            console.error("Failed to parse workout plan from localStorage", error);
-            localStorage.removeItem('workoutPlan');
+            console.error("Failed to parse workout progress from localStorage", error);
+            localStorage.removeItem('workoutProgress');
         }
         setIsLoading(false);
     }, []);
@@ -680,29 +668,36 @@ export function WorkoutCourse() {
             ...day,
             exercises: day.exercises.map(ex => ({ ...ex, done: false, actualSets: '', actualReps: '', actualDuration: '', actualWeight: '' }))
         }));
-        localStorage.setItem('workoutPlan', JSON.stringify(planWithDoneStatus));
-        setSavedPlan(planWithDoneStatus);
+        const newProgress: SavedProgress = { plan: planWithDoneStatus, currentDay: 1 };
+        localStorage.setItem('workoutProgress', JSON.stringify(newProgress));
+        setSavedProgress(newProgress);
         setCourseConfig(null);
     };
+
+    const handleProgressChange = (newProgress: SavedProgress) => {
+        localStorage.setItem('workoutProgress', JSON.stringify(newProgress));
+        setSavedProgress(newProgress);
+    }
     
     const handleEditPlan = () => {
-        if (savedPlan) {
-            const hasStrength = savedPlan.some(d => d.exercises.some(e => e.type === 'strength'));
-            const hasCardio = savedPlan.some(d => d.exercises.some(e => e.type === 'cardio'));
+        if (savedProgress) {
+            const { plan } = savedProgress;
+            const hasStrength = plan.some(d => d.exercises.some(e => e.type === 'strength'));
+            const hasCardio = plan.some(d => d.exercises.some(e => e.type === 'cardio'));
             let workoutType: CourseConfig['workoutType'] = 'mixed';
             if (hasStrength && !hasCardio) workoutType = 'strength';
             if (!hasStrength && hasCardio) workoutType = 'cardio';
 
             setCourseConfig({
-                daysPerWeek: savedPlan.length,
+                daysPerWeek: plan.length,
                 workoutType: workoutType,
             });
         }
     };
     
     const handleResetPlan = () => {
-        localStorage.removeItem('workoutPlan');
-        setSavedPlan(null);
+        localStorage.removeItem('workoutProgress');
+        setSavedProgress(null);
         setCourseConfig(null);
     };
 
@@ -714,12 +709,12 @@ export function WorkoutCourse() {
         return <LoadingSkeleton />;
     }
 
-    if (savedPlan && !courseConfig) {
-        return <WorkoutPlanDisplay plan={savedPlan} onEdit={handleEditPlan} onReset={handleResetPlan} />;
+    if (savedProgress && !courseConfig) {
+        return <WorkoutPlanDisplay progress={savedProgress} onProgressChange={handleProgressChange} onEdit={handleEditPlan} onReset={handleResetPlan} />;
     }
 
     if (courseConfig) {
-        return <WorkoutPlanSetup config={courseConfig} existingPlan={savedPlan} onSave={handleSavePlan} onCancel={handleCancelEdit} />;
+        return <WorkoutPlanSetup config={courseConfig} existingPlan={savedProgress?.plan} onSave={handleSavePlan} onCancel={handleCancelEdit} />;
     }
 
     return <CourseRegistration onCourseCreate={setCourseConfig} />;
