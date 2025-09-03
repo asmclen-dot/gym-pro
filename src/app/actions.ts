@@ -4,8 +4,9 @@ import { generatePersonalizedRecipe, PersonalizedRecipeInput } from '@/ai/flows/
 import { estimateWorkoutCalories, WorkoutCalorieEstimationInput, ExerciseDetail } from '@/ai/flows/workout-calorie-estimation';
 import { z } from 'zod';
 import { generateWorkoutPlanFlow } from '@/ai/flows/generate-workout-plan';
-import { GenerateWorkoutPlanInput, GenerateWorkoutPlanInputSchema, GenerateWorkoutPlanOutput, GenerateWorkoutPlanOutputSchema } from './types';
+import { GenerateWorkoutPlanInput, GenerateWorkoutPlanOutput, GenerateWorkoutPlanInputSchema } from './types';
 import { generateFitnessReportFlow } from '@/ai/flows/generate-fitness-report';
+import { FitnessReportInput, FitnessReportInputSchema, FitnessReportOutput } from './types';
 
 
 const recipeSchema = z.object({
@@ -178,26 +179,6 @@ export async function generateAIPlanAction(input: GenerateWorkoutPlanInput): Pro
         };
     }
 }
-
-
-export const FitnessReportInputSchema = z.object({
-  startDate: z.string().describe("The start date for the report period in YYYY-MM-DD format."),
-  endDate: z.string().describe("The end date for the report period in YYYY-MM-DD format."),
-  dailyData: z.record(z.object({
-    calories: z.number().optional().describe("Calories consumed or burned on that day."),
-  })).describe("An object where keys are dates (YYYY-MM-DD) and values are the data for that day."),
-  userWeightKg: z.number().optional().describe("The user's current weight in kilograms to improve estimation accuracy.")
-});
-export type FitnessReportInput = z.infer<typeof FitnessReportInputSchema>;
-
-export const FitnessReportOutputSchema = z.object({
-    periodSummary: z.string().describe("A summary of the user's performance during the period in Arabic. Include average daily calories consumed and burned."),
-    dietaryAnalysis: z.string().describe("A brief analysis of the user's dietary habits based on the calorie data in Arabic."),
-    workoutAnalysis: z.string().describe("A brief analysis of the user's workout consistency and performance in Arabic."),
-    estimatedResults: z.string().describe("An estimation of the results, like fat loss, in Arabic. Base this on a 7700 calorie deficit for 1kg of fat loss. Be encouraging and scientific."),
-    recommendations: z.string().describe("Actionable recommendations for the next period to improve results, in Arabic.")
-});
-export type FitnessReportOutput = z.infer<typeof FitnessReportOutputSchema>;
 
 
 export type ReportState = {

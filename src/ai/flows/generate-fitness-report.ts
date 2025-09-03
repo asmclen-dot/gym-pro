@@ -6,7 +6,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import { FitnessReportInputSchema, FitnessReportOutputSchema, FitnessReportInput } from '@/app/actions';
+import { FitnessReportInputSchema, FitnessReportOutputSchema, FitnessReportInput } from '@/app/types';
 
 
 const prompt = ai.definePrompt({
