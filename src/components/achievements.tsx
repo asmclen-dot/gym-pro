@@ -27,7 +27,7 @@ export function Achievements() {
         {categories.map(category => (
           <div key={category}>
             <h3 className="text-xl font-bold mb-4 font-headline">{category}</h3>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
               {allAchievements.filter(a => a.category === category).map((badge, index) => (
                 <TooltipProvider key={index} delayDuration={0}>
                   <Tooltip>

@@ -90,7 +90,7 @@ export function FoodTracker() {
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input placeholder="ابحث عن طعام..." className="pr-10" />
           </div>
-          <Button variant="outline">
+          <Button variant="outline" className='flex-shrink-0'>
             <Barcode className="ml-2 h-5 w-5" />
             مسح الباركود
           </Button>

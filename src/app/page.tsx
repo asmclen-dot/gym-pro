@@ -14,7 +14,7 @@ export default function Home() {
       <Header />
       <main className="flex-1 p-4 md:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto">
-           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
             <Link href="/gym">
               <Button className="w-full h-16 text-lg">
                 <Dumbbell className="ml-4 h-6 w-6" />

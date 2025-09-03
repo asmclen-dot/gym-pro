@@ -97,7 +97,7 @@ export function BodyJourney() {
                             <p className="text-sm">ابدأ رحلتك بتحميل صورتك الأولى!</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                             {images.map(image => (
                                 <div key={image.id} className="group relative overflow-hidden rounded-lg shadow-md">
                                     <Image src={image.dataUrl} alt={`صورة بتاريخ ${image.date}`} width={400} height={600} className="w-full h-auto object-cover aspect-[2/3] transition-transform duration-300 group-hover:scale-105" />

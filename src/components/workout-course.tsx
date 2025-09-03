@@ -396,7 +396,7 @@ function WorkoutPlanSetup({ config, existingPlan, onSave, onCancel }: { config: 
                         </div>
                         
                         {newExercise.type === 'strength' && (
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="weight">الوزن المستهدف (كغ)</Label>
                                     <Input id="weight" type="number" value={newExercise.targetWeight || ''} onChange={(e) => setNewExercise({ ...newExercise, targetWeight: parseInt(e.target.value) })} placeholder="10" />
@@ -625,7 +625,7 @@ function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset }: { p
     return (
         <>
             <Card>
-                <CardHeader className='flex-row items-center justify-between'>
+                <CardHeader className='flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between'>
                     <div>
                         <CardTitle className="font-headline text-2xl tracking-tight">يوم التمرين {currentDay} من {plan.length}</CardTitle>
                         <CardDescription>هذا هو تركيزك لليوم. بالتوفيق!</CardDescription>

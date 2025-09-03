@@ -126,7 +126,7 @@ export function Settings() {
                             />
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                            <div className="space-y-2">
                                 <Label htmlFor="weight" className='flex items-center gap-2'><Weight className='h-4 w-4'/> وزنك (كغ)</Label>
                                 <Input
@@ -196,7 +196,7 @@ export function Settings() {
                                 {isSuggesting ? <Loader2 className="h-4 w-4 animate-spin"/> : <Wand2 className="h-4 w-4" />}
                                 أهداف مقترحة بالذكاء الاصطناعي
                             </div>
-                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border p-4 rounded-md">
+                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border p-4 rounded-md">
                                 <div className="space-y-2">
                                     <Label htmlFor="weekly-calories" className='flex items-center gap-2'><Flame className='h-4 w-4'/> هدف السعرات الحرارية الأسبوعي</Label>
                                     <Input
