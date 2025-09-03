@@ -17,6 +17,14 @@ export default function Home() {
       <Header />
       <main className="flex-1 p-4 md:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto">
+           <div className="mb-6">
+            <Link href="/gym">
+              <Button className="w-full h-16 text-lg">
+                <Dumbbell className="ml-4 h-6 w-6" />
+                اذهب إلى صفحة الجيم الخاصة بي
+              </Button>
+            </Link>
+          </div>
           <div className="grid gap-6 lg:gap-8 grid-cols-1 lg:grid-cols-3">
             <div className="lg:col-span-3">
               <Stats />
