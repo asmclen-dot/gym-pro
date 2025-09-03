@@ -11,10 +11,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Sparkles, CalendarDays, Dumbbell, Star, Repeat, Clock, Coffee, Check, X } from 'lucide-react';
+import { Loader2, Sparkles, Dumbbell, Star, Repeat, Clock, Coffee, Check, CalendarDays } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const initialState: WorkoutPlanState = {
   data: null,
@@ -76,23 +77,23 @@ export default function GymPage() {
           <Card className="shadow-lg">
             <form action={formAction}>
               <CardHeader>
-                <CardTitle>1. إنشاء خطة التمرين الخاصة بك</CardTitle>
+                <CardTitle>1. إنشاء خطة التمرين الأسبوعية</CardTitle>
                 <CardDescription>
-                  أخبرنا عن أهدافك وعدد الأيام التي ترغب في التمرين فيها، وسيقوم الذكاء الاصطناعي بتصميم خطة مخصصة لك.
+                  أخبرنا عن أهدافك وعدد أيام التمرين التي يوصي بها مدربك، وسيقوم الذكاء الاصطناعي بتنظيمها في جدول أسبوعي.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="days">كم عدد أيام التمرين في الأسبوع؟</Label>
                     <Input id="days" name="days" type="number" min="1" max="7" placeholder="مثال: 3" required />
                   </div>
-                   <div className="space-y-2">
-                    <Label htmlFor="goals">ما هي أهدافك؟</Label>
+                   <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="goals">ما هي أهدافك الرئيسية؟ (مثال: خسارة دهون، بناء عضل)</Label>
                     <Textarea
                       id="goals"
                       name="goals"
-                      placeholder="مثال: خسارة الوزن وبناء العضلات، زيادة القوة البدنية"
+                      placeholder="هذا سيساعد الذكاء الاصطناعي على اقتراح أنواع التمارين المناسبة لأيام التمرين."
                       required
                     />
                   </div>
@@ -107,9 +108,9 @@ export default function GymPage() {
           {state.data && (
             <Card className="shadow-lg">
               <CardHeader>
-                <CardTitle>2. خطة التمرين المخصصة لك</CardTitle>
+                <CardTitle>2. خطتك الأسبوعية المقترحة</CardTitle>
                 <CardDescription>
-                  هذه هي خطتك للأيام القادمة. يمكنك البدء في أي يوم.
+                  هذه هي خطتك للأسبوع. يمكنك تعديل التمارين بما يناسب توجيهات مدربك.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -127,13 +128,26 @@ export default function GymPage() {
                       </AccordionTrigger>
                       <AccordionContent>
                         {dayPlan.isRestDay ? (
-                            <p className="text-center text-muted-foreground py-4">استمتع بيوم الراحة! الجسم يحتاج إلى التعافي لبناء العضلات.</p>
+                            <Alert className="border-accent bg-accent/20">
+                                <Coffee className="h-4 w-4 text-accent-foreground" />
+                                <AlertTitle>يوم راحة!</AlertTitle>
+                                <AlertDescription>
+                                استمتع بيوم الراحة! الجسم يحتاج إلى التعافي لبناء العضلات وتقوية الأداء.
+                                </AlertDescription>
+                            </Alert>
                         ) : (
                             <div className="space-y-4 pr-4 border-r-2 border-primary/20">
+                                <Alert variant="default" className='mb-4'>
+                                  <Star className="h-4 w-4" />
+                                  <AlertTitle>تمارين مقترحة</AlertTitle>
+                                  <AlertDescription>
+                                    هذه التمارين هي مجرد اقتراحات من الذكاء الاصطناعي. قم باستبدالها بالتمارين الفعلية من خطة مدربك.
+                                  </AlertDescription>
+                                </Alert>
                                 {dayPlan.exercises.map((exercise, index) => (
                                     <div key={index} className="flex items-start justify-between p-3 rounded-lg bg-secondary/30">
                                         <div className='flex items-start gap-3'>
-                                            <Star className="h-5 w-5 mt-1 text-accent-foreground/50" />
+                                            <Dumbbell className="h-5 w-5 mt-1 text-accent-foreground/50" />
                                             <div>
                                                 <p className="font-semibold">{exercise.name}</p>
                                                 {exercise.notes && <p className="text-xs text-muted-foreground">{exercise.notes}</p>}
@@ -149,7 +163,7 @@ export default function GymPage() {
                                             {exercise.reps && (
                                                 <div className="flex items-center gap-1">
                                                     <span>{exercise.reps}</span>
-                                                    <Dumbbell className="h-4 w-4 text-muted-foreground" />
+                                                    <p className='text-xs'>عدات</p>
                                                 </div>
                                             )}
                                              {exercise.duration && (
@@ -164,7 +178,7 @@ export default function GymPage() {
                                 <div className='pt-4 text-center'>
                                   <Button>
                                     <Check className='ml-2 h-4 w-4' />
-                                    بدء هذا التمرين
+                                    بدء وتسجيل هذا التمرين
                                   </Button>
                                 </div>
                             </div>
@@ -181,7 +195,7 @@ export default function GymPage() {
            <Card className="border-dashed">
              <CardHeader>
                <CardTitle className="text-muted-foreground">3. تتبع تمرينك اليومي</CardTitle>
-                <CardDescription>قريباً: ستتمكن من تسجيل الأوزان والسرعات هنا أثناء التمرين.</CardDescription>
+                <CardDescription>قريباً: ستتمكن من تسجيل الأوزان والسرعات هنا أثناء التمرين لحساب السعرات المحروقة بدقة.</CardDescription>
              </CardHeader>
              <CardContent>
                 <div className="flex justify-center items-center h-24 bg-muted/50 rounded-lg">

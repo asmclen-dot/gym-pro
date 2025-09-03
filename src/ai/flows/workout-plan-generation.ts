@@ -11,7 +11,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const WorkoutPlanInputSchema = z.object({
-  days: z.number().describe("The number of days for the workout plan (e.g., 3, 5)."),
+  days: z.number().describe("The number of workout days for the workout plan (e.g., 3, 5)."),
   goals: z.string().describe("The user's fitness goals (e.g., 'lose weight and build muscle')."),
 });
 export type WorkoutPlanInput = z.infer<typeof WorkoutPlanInputSchema>;
@@ -44,18 +44,18 @@ const prompt = ai.definePrompt({
   name: 'workoutPlanPrompt',
   input: {schema: WorkoutPlanInputSchema},
   output: {schema: WorkoutPlanOutputSchema},
-  prompt: `You are an expert fitness coach. Create a detailed, personalized workout plan in Arabic based on the user's goals and the specified number of days.
+  prompt: `You are an expert fitness coach. Create a detailed, personalized workout plan in Arabic based on the user's goals and the specified number of days. The total plan length should be for a full week (7 days).
 
 User Goals: {{{goals}}}
-Number of Days: {{{days}}}
+Number of Workout Days: {{{days}}}
 
-The plan should be structured logically, distributing workout days and rest days effectively throughout the period. For example, if the user asks for a 3-day plan, it could be Day 1: Workout, Day 2: Rest, Day 3: Workout.
+The plan should be structured logically over a 7-day period, distributing the requested workout days and adding rest days automatically to complete the week. For example, if the user asks for a 3-day plan, you should create a 7-day schedule with 3 workout days and 4 rest days, intelligently spaced out (e.g., Day 1: Workout, Day 2: Rest, Day 3: Workout, Day 4: Rest, Day 5: Workout, Day 6: Rest, Day 7: Rest).
 
-For each workout day, provide a clear title (e.g., "يوم الدفع - صدر، أكتاف، ترايسبس") and a list of specific exercises.
+For each workout day, provide a clear title (e.g., "يوم الدفع - صدر، أكتاف، ترايسبس") and a list of specific exercises. The user's real coach will provide the exercises, so you should generate realistic placeholder exercises based on the day's title and user's goals.
 For each exercise, specify the name, number of sets and reps for strength exercises, or duration for cardio/endurance exercises. Add brief notes if necessary.
 For rest days, clearly label them as "يوم راحة" and do not include any exercises.
 
-The entire response must be in valid JSON format, strictly following the output schema. All text content must be in Arabic.
+The entire response must be in valid JSON format, strictly following the output schema. All text content must be in Arabic. The final plan should contain exactly 7 days.
 `,
 });
 
