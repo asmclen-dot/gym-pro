@@ -1,14 +1,13 @@
 "use client"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Flame, Footprints, Target, Zap } from 'lucide-react';
-import React from 'react';
+import { Flame, Footprints, Target, Zap, BarChart as BarChartIcon } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { format, subDays } from 'date-fns';
+import { arSA } from 'date-fns/locale';
 
-const chartData: { day: string, calories: number, steps: number }[] = [
-  // البيانات النموذجية تم إزالتها
-]
 
 const chartConfig = {
   calories: {
@@ -21,11 +20,76 @@ const chartConfig = {
   },
 }
 
+interface DailyData {
+    date: string;
+    calories: number;
+    steps: number;
+}
+
+
 export function Stats() {
+  const [chartData, setChartData] = useState<DailyData[]>([]);
+  
+  useEffect(() => {
+    // This effect runs only on the client side
+    const today = new Date();
+    const weekData: DailyData[] = [];
+    let consecutiveDays = 0;
+    let currentStreak = 0;
+
+    for (let i = 6; i >= 0; i--) {
+        const date = subDays(today, i);
+        const dateString = format(date, 'yyyy-MM-dd');
+        const storedData = localStorage.getItem(dateString);
+        let dayCalories = 0;
+        
+        if (storedData) {
+            const parsedData = JSON.parse(storedData);
+            dayCalories = parsedData.calories || 0;
+            if(dayCalories > 0) {
+              consecutiveDays++;
+            } else {
+              consecutiveDays = 0;
+            }
+        } else {
+          consecutiveDays = 0;
+        }
+
+        if(consecutiveDays > currentStreak) {
+            currentStreak = consecutiveDays;
+        }
+
+        weekData.push({
+            date: format(date, 'eeee', { locale: arSA }), // 'الأحد', 'الاثنين', etc.
+            calories: dayCalories,
+            steps: 0, // Placeholder for now
+        });
+    }
+
+    const todayString = format(today, 'yyyy-MM-dd');
+    const storedToday = localStorage.getItem(todayString);
+    if(storedToday) {
+        if(JSON.parse(storedToday).calories === 0) {
+            consecutiveDays = 0;
+        }
+    } else {
+        consecutiveDays = 0;
+    }
+     if(consecutiveDays > currentStreak) {
+        currentStreak = consecutiveDays;
+    }
+
+
+    // Set the final streak based on check up to today
+    setStreak(currentStreak);
+    setChartData(weekData);
+
+  }, []);
+
   const totalCalories = chartData.reduce((acc, curr) => acc + curr.calories, 0);
   const totalSteps = chartData.reduce((acc, curr) => acc + curr.steps, 0);
   const points = Math.floor(totalCalories / 10 + totalSteps / 100);
-  const streak = 0; // تم تعديل القيمة الأولية
+  const [streak, setStreak] = useState(0);
 
   return (
     <Card className="shadow-sm">
@@ -66,7 +130,7 @@ export function Stats() {
         </div>
         {chartData.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
-            <BarChart className="h-20 w-20" />
+            <BarChartIcon className="h-20 w-20" />
             <p className="mt-4 text-sm">لا توجد بيانات متاحة لهذا الأسبوع.</p>
             <p className="text-xs">ابدأ في تسجيل أنشطتك لرؤية تقدمك.</p>
           </div>
@@ -81,7 +145,7 @@ export function Stats() {
                 <ChartContainer config={chartConfig} className="w-full h-full">
                   <BarChart data={chartData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                    <XAxis dataKey="day" tickLine={false} axisLine={false} tickMargin={8} />
+                    <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
                     <YAxis tickLine={false} axisLine={false} tickMargin={8} width={80} />
                     <ChartTooltip
                       cursor={false}
@@ -93,20 +157,20 @@ export function Stats() {
               </div>
             </TabsContent>
             <TabsContent value="steps">
-              <div className="h-[250px] w-full pt-4">
-                <ChartContainer config={chartConfig} className="w-full h-full">
-                  <BarChart data={chartData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                    <XAxis dataKey="day" tickLine={false} axisLine={false} tickMargin={8} />
-                    <YAxis tickLine={false} axisLine={false} tickMargin={8} width={80} />
-                    <ChartTooltip
-                      cursor={false}
-                      content={<ChartTooltipContent indicator="dot" />}
-                    />
-                    <Bar dataKey="steps" fill="var(--color-steps)" radius={4} />
-                  </BarChart>
-                </ChartContainer>
-              </div>
+               <div className="h-[250px] w-full pt-4">
+                 <ChartContainer config={chartConfig} className="w-full h-full">
+                   <BarChart data={chartData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
+                     <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                     <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+                     <YAxis tickLine={false} axisLine={false} tickMargin={8} width={80} />
+                     <ChartTooltip
+                       cursor={false}
+                       content={<ChartTooltipContent indicator="dot" />}
+                     />
+                     <Bar dataKey="steps" fill="var(--color-steps)" radius={4} />
+                   </BarChart>
+                 </ChartContainer>
+               </div>
             </TabsContent>
           </Tabs>
         )}

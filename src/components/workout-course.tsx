@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { getWorkoutCaloriesAction, WorkoutState } from '@/app/actions';
+import { format } from 'date-fns';
+
 
 const exerciseList = [
     // Chest
@@ -431,8 +433,9 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
             return;
         }
 
-        const exercisesToCalculate = dayData.exercises.map(e => {
-             const exerciseData: any = {
+        const exercisesToCalculate = dayData.exercises
+          .map(e => {
+            const exerciseData: any = {
                 name: e.name,
                 type: e.type,
             };
@@ -447,6 +450,13 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
             if (reps) exerciseData.reps = Number(reps);
             if (weight) exerciseData.weight = Number(weight);
             
+            // Filter out empty/NaN properties
+            Object.keys(exerciseData).forEach(key => {
+                if (exerciseData[key] === undefined || exerciseData[key] === null || isNaN(exerciseData[key])) {
+                    delete exerciseData[key];
+                }
+            });
+
             return exerciseData;
         });
         
@@ -457,7 +467,18 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
         const result: WorkoutState = await getWorkoutCaloriesAction({ data: null, error: null, message: null }, formData);
         
         if (result.data) {
-            setDailyCalories(prev => ({ ...prev, [dayNumber]: result.data.estimatedCalories }));
+            const calculatedCalories = result.data.estimatedCalories;
+            setDailyCalories(prev => ({ ...prev, [dayNumber]: calculatedCalories }));
+
+            // Save to localStorage
+            const today = format(new Date(), 'yyyy-MM-dd');
+            try {
+                const dayStorage = JSON.parse(localStorage.getItem(today) || '{}');
+                dayStorage.calories = (dayStorage.calories || 0) + calculatedCalories;
+                localStorage.setItem(today, JSON.stringify(dayStorage));
+            } catch (error) {
+                 localStorage.setItem(today, JSON.stringify({ calories: calculatedCalories }));
+            }
         } else {
             console.error(result.error);
             setDailyCalories(prev => ({ ...prev, [dayNumber]: -1 })); // Use -1 to indicate an error
@@ -532,20 +553,20 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
                                                         <>
                                                             <Weight className="h-4 w-4 text-muted-foreground" />
                                                             <Input type='number' placeholder={`${ex.targetWeight || 0} كغ`} className='h-8 w-24 text-sm'
-                                                              onChange={(e) => handlePerformanceChange(day, ex.id, 'actualWeight', e.target.value)} />
+                                                              onChange={(e) => handlePerformanceChange(day, ex.id, 'actualWeight', parseInt(e.target.value))} />
                                                             <Repeat className="h-4 w-4 text-muted-foreground" />
                                                              <Input type='number' placeholder={`${ex.targetSets || 0}`} className='h-8 w-16 text-sm'
-                                                              onChange={(e) => handlePerformanceChange(day, ex.id, 'actualSets', e.target.value)} />
+                                                              onChange={(e) => handlePerformanceChange(day, ex.id, 'actualSets', parseInt(e.target.value))} />
                                                             <span className='text-muted-foreground'>x</span>
                                                             <Input type='number' placeholder={`${ex.targetReps || 0}`} className='h-8 w-16 text-sm'
-                                                              onChange={(e) => handlePerformanceChange(day, ex.id, 'actualReps', e.target.value)} />
+                                                              onChange={(e) => handlePerformanceChange(day, ex.id, 'actualReps', parseInt(e.target.value))} />
                                                         </>
                                                     )}
                                                     {(ex.type === 'cardio' || ex.type === 'flexibility') && (
                                                          <>
                                                             <Clock className="h-4 w-4 text-muted-foreground" />
                                                             <Input type='number' placeholder={`${ex.targetDuration || 0} دقيقة`} className='h-8 w-28 text-sm'
-                                                              onChange={(e) => handlePerformanceChange(day, ex.id, 'actualDuration', e.target.value)} />
+                                                              onChange={(e) => handlePerformanceChange(day, ex.id, 'actualDuration', parseInt(e.target.value))} />
                                                         </>
                                                     )}
                                                 </div>
