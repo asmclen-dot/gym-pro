@@ -113,9 +113,15 @@ export async function getWorkoutCaloriesAction(prevState: WorkoutState, formData
     rawData.exercises = formData.get('exercises');
   } else {
     rawData.exerciseName = formData.get('exerciseName');
-    rawData.durationInMinutes = formData.get('durationInMinutes');
-    rawData.sets = formData.get('sets');
-    rawData.reps = formData.get('reps');
+    if (formData.has('durationInMinutes')) {
+        rawData.durationInMinutes = formData.get('durationInMinutes');
+    }
+    if (formData.has('sets')) {
+        rawData.sets = formData.get('sets');
+    }
+    if (formData.has('reps')) {
+        rawData.reps = formData.get('reps');
+    }
   }
 
   const validatedFields = workoutSchema.safeParse(rawData);
