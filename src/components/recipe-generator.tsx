@@ -1,7 +1,8 @@
 "use client";
 
 import React from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { getRecipeAction, RecipeState } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -37,7 +38,7 @@ function SubmitButton() {
 }
 
 export function RecipeGenerator() {
-  const [state, formAction] = useFormState(getRecipeAction, initialState);
+  const [state, formAction] = useActionState(getRecipeAction, initialState);
   const { toast } = useToast();
 
   React.useEffect(() => {
