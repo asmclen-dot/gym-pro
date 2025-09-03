@@ -6,41 +6,41 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dumbbell, Heart, Combine } from 'lucide-react';
+import { Dumbbell, Heart, Combine, PlusCircle } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
-// Step 1: Course Registration State
+
 interface CourseConfig {
   daysPerWeek: number;
   workoutType: 'strength' | 'cardio' | 'mixed' | '';
 }
 
-export function WorkoutCourse() {
-  const [courseConfig, setCourseConfig] = useState<CourseConfig | null>(null);
+interface Exercise {
+    name: string;
+    sets?: number;
+    reps?: number;
+    duration?: number; // in minutes
+}
+
+interface WorkoutDay {
+    day: number;
+    exercises: Exercise[];
+}
+
+
+function CourseRegistration({ onCourseCreate }: { onCourseCreate: (config: CourseConfig) => void }) {
   const [days, setDays] = useState('');
   const [type, setType] = useState('');
 
   const handleCreateCourse = () => {
     if (days && type) {
-      setCourseConfig({
+      onCourseCreate({
         daysPerWeek: parseInt(days),
         workoutType: type as CourseConfig['workoutType'],
       });
     }
   };
 
-  // If a course is already configured, show the dashboard (to be built)
-  if (courseConfig) {
-    return (
-      <div>
-        <h2 className="text-2xl font-bold mb-4">كورس التمرين الخاص بك</h2>
-        <p>أيام التمرين في الأسبوع: {courseConfig.daysPerWeek}</p>
-        <p>نوع التمرين: {courseConfig.workoutType}</p>
-        <p className="mt-4 text-muted-foreground">الخطوات التالية: بناء جدول التمرين اليومي وتسجيل الأداء.</p>
-      </div>
-    );
-  }
-
-  // Step 1: Render the course registration form
   return (
     <Card className="shadow-lg">
       <CardHeader>
@@ -97,4 +97,55 @@ export function WorkoutCourse() {
       </CardFooter>
     </Card>
   );
+}
+
+function WorkoutPlanSetup({ config }: { config: CourseConfig }) {
+    const workoutDays = Array.from({ length: config.daysPerWeek }, (_, i) => ({
+        day: i + 1,
+        exercises: [],
+    }));
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline text-2xl tracking-tight">تخصيص خطة التمرين الخاصة بك</CardTitle>
+                <CardDescription>أضف التمارين التي وصفها لك مدربك لكل يوم.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Accordion type="multiple" defaultValue={['day-1']} className="w-full">
+                    {workoutDays.map(({ day }) => (
+                        <AccordionItem value={`day-${day}`} key={day}>
+                            <AccordionTrigger className="text-lg font-semibold">
+                                يوم التمرين {day}
+                            </AccordionTrigger>
+                            <AccordionContent className="space-y-4 pt-4">
+                                <div className="text-center text-muted-foreground p-4 border rounded-lg">
+                                    <p>لم تتم إضافة تمارين بعد.</p>
+                                </div>
+                                <Button variant="outline" className="w-full">
+                                    <PlusCircle className="ml-2 h-5 w-5" />
+                                    إضافة تمرين
+                                </Button>
+                            </AccordionContent>
+                        </AccordionItem>
+                    ))}
+                </Accordion>
+            </CardContent>
+            <CardFooter>
+                 <Button size="lg" className="w-full text-lg">
+                    حفظ الكورس
+                </Button>
+            </CardFooter>
+        </Card>
+    )
+}
+
+export function WorkoutCourse() {
+  const [courseConfig, setCourseConfig] = useState<CourseConfig | null>(null);
+
+  if (courseConfig) {
+    return <WorkoutPlanSetup config={courseConfig} />;
+  }
+
+  return <CourseRegistration onCourseCreate={setCourseConfig} />;
 }
