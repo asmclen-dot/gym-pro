@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Sparkles, Dumbbell, Star, Repeat, Clock, Coffee, Check, CalendarDays } from 'lucide-react';
+import { Loader2, Sparkles, Dumbbell, Star, Repeat, Clock, Coffee, Check } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -114,7 +114,7 @@ export default function GymPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Accordion type="single" collapsible className="w-full">
+                <Accordion type="single" collapsible className="w-full" defaultValue="day-1">
                   {state.data.plan.map((dayPlan) => (
                     <AccordionItem key={dayPlan.day} value={`day-${dayPlan.day}`}>
                       <AccordionTrigger>
