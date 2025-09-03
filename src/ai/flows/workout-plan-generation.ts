@@ -55,7 +55,7 @@ For each workout day, provide a clear title (e.g., "يوم الدفع - صدر،
 For each exercise, specify the name, number of sets and reps for strength exercises, or duration for cardio/endurance exercises. Add brief notes if necessary.
 For rest days, clearly label them as "يوم راحة" and do not include any exercises.
 
-The entire response must be in valid JSON format, strictly following the output schema. All text content must be in Arabic. The final plan should contain exactly 7 days.
+The entire response must be in valid JSON format, strictly following the output schema. Do not include any text before or after the JSON object. All text content must be in Arabic. The final plan must contain exactly 7 days.
 `,
 });
 
