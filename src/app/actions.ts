@@ -2,6 +2,7 @@
 
 import { generatePersonalizedRecipe, PersonalizedRecipeInput } from '@/ai/flows/personalized-recipe-generation';
 import { estimateWorkoutCalories, WorkoutCalorieEstimationInput, ExerciseDetail } from '@/ai/flows/workout-calorie-estimation';
+import { generateWorkoutPlan, GenerateWorkoutPlanInput } from '@/ai/flows/generate-workout-plan';
 import { z } from 'zod';
 
 const recipeSchema = z.object({
@@ -154,4 +155,29 @@ export async function getWorkoutCaloriesAction(prevState: WorkoutState, formData
       input: input as WorkoutCalorieEstimationInput
     };
   }
+}
+
+// Action for AI workout plan generation
+export type AIPlanState = {
+    data: Awaited<ReturnType<typeof generateWorkoutPlan>> | null;
+    error: string | null;
+    message: string | null;
+};
+
+export async function generateAIPlanAction(input: GenerateWorkoutPlanInput): Promise<AIPlanState> {
+    try {
+        const plan = await generateWorkoutPlan(input);
+        return {
+            data: plan,
+            error: null,
+            message: 'تم إنشاء الخطة بنجاح!',
+        };
+    } catch (e) {
+        const errorMessage = e instanceof Error ? e.message : 'حدث خطأ غير معروف.';
+        return {
+            data: null,
+            error: `فشل إنشاء الخطة: ${errorMessage}`,
+            message: 'فشل إنشاء الذكاء الاصطناعي.',
+        };
+    }
 }

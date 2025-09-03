@@ -12,7 +12,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { getWorkoutCaloriesAction, WorkoutState } from '@/app/actions';
+import { getWorkoutCaloriesAction, WorkoutState, generateAIPlanAction, AIPlanState } from '@/app/actions';
 import { format } from 'date-fns';
 
 
@@ -60,10 +60,10 @@ interface Exercise {
     targetDuration?: number; // in minutes
     targetWeight?: number; // in kg
     // Actual logged values
-    actualSets?: number;
-    actualReps?: number;
-    actualDuration?: number;
-    actualWeight?: number;
+    actualSets?: number | string;
+    actualReps?: number | string;
+    actualDuration?: number | string;
+    actualWeight?: number | string;
     done?: boolean;
 }
 
@@ -144,9 +144,9 @@ function CourseRegistration({ onCourseCreate }: { onCourseCreate: (config: Cours
   );
 }
 
-function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (plan: WorkoutDay[]) => void }) {
+function WorkoutPlanSetup({ config, existingPlan, onSave }: { config: CourseConfig, existingPlan?: WorkoutDay[] | null, onSave: (plan: WorkoutDay[]) => void }) {
     const [workoutDays, setWorkoutDays] = useState<WorkoutDay[]>(
-        Array.from({ length: config.daysPerWeek }, (_, i) => ({
+        existingPlan || Array.from({ length: config.daysPerWeek }, (_, i) => ({
             day: i + 1,
             targetTime: '',
             exercises: [],
@@ -157,6 +157,23 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
     const [newExercise, setNewExercise] = useState<Partial<Exercise>>({ type: 'strength' });
     const [searchTerm, setSearchTerm] = useState("");
     const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
+
+
+    const handleGenerateAIPlan = async () => {
+        setIsGenerating(true);
+        const result: AIPlanState = await generateAIPlanAction({
+            daysPerWeek: config.daysPerWeek,
+            workoutType: config.workoutType as 'strength' | 'cardio' | 'mixed'
+        });
+        if (result.data?.plan) {
+            setWorkoutDays(result.data.plan);
+        } else {
+            // Handle error, maybe show a toast
+            console.error(result.error);
+        }
+        setIsGenerating(false);
+    };
 
     const filteredExercises = useMemo(() =>
         searchTerm
@@ -235,9 +252,15 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
             <Card>
                 <CardHeader>
                     <CardTitle className="font-headline text-2xl tracking-tight">تخصيص خطة التمرين الخاصة بك</CardTitle>
-                    <CardDescription>أضف التمارين التي وصفها لك مدربك لكل يوم.</CardDescription>
+                    <CardDescription>أضف التمارين يدويًا أو دع الذكاء الاصطناعي ينشئ لك خطة.</CardDescription>
                 </CardHeader>
                 <CardContent>
+                     <div className="mb-4">
+                        <Button onClick={handleGenerateAIPlan} disabled={isGenerating} className="w-full">
+                            {isGenerating ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <BrainCircuit className="ml-2 h-5 w-5" />}
+                            {isGenerating ? 'جارٍ إنشاء الخطة...' : 'إنشاء خطة بواسطة الذكاء الاصطناعي'}
+                        </Button>
+                    </div>
                     <Accordion type="multiple" defaultValue={['day-1']} className="w-full">
                         {workoutDays.map(({ day, exercises, targetTime }) => (
                             <AccordionItem value={`day-${day}`} key={day}>
@@ -294,7 +317,7 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
                                     )}
                                     <Button variant="outline" className="w-full" onClick={() => openAddExerciseDialog(day)}>
                                         <PlusCircle className="ml-2 h-5 w-5" />
-                                        إضافة تمرين
+                                        إضافة تمرين يدويًا
                                     </Button>
                                 </AccordionContent>
                             </AccordionItem>
@@ -302,7 +325,7 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
                     </Accordion>
                 </CardContent>
                 <CardFooter>
-                    <Button size="lg" className="w-full text-lg" onClick={() => onSave(workoutDays)} disabled={isPlanEmpty}>
+                    <Button size="lg" className="w-full text-lg" onClick={() => onSave(workoutDays)} disabled={isPlanEmpty || isGenerating}>
                         <CheckSquare className='ml-2 h-5 w-5'/>
                         حفظ الكورس
                     </Button>
@@ -439,24 +462,26 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
             return;
         }
 
-        const exercisesToCalculate = dayData.exercises.map(e => {
-            const exerciseData: any = {
-                name: e.name,
-                type: e.type,
-            };
-
-            const duration = getNumericValue(e.actualDuration) ?? getNumericValue(e.targetDuration);
-            const sets = getNumericValue(e.actualSets) ?? getNumericValue(e.targetSets);
-            const reps = getNumericValue(e.actualReps) ?? getNumericValue(e.targetReps);
-            const weight = getNumericValue(e.actualWeight) ?? getNumericValue(e.targetWeight);
-
-            if (duration !== undefined) exerciseData.durationInMinutes = duration;
-            if (sets !== undefined) exerciseData.sets = sets;
-            if (reps !== undefined) exerciseData.reps = reps;
-            if (weight !== undefined) exerciseData.weight = weight;
-
-            return exerciseData;
-        });
+        const exercisesToCalculate = dayData.exercises
+            .map(e => {
+                const exerciseData: any = {
+                    name: e.name,
+                    type: e.type,
+                };
+    
+                const duration = getNumericValue(e.actualDuration) ?? getNumericValue(e.targetDuration);
+                const sets = getNumericValue(e.actualSets) ?? getNumericValue(e.targetSets);
+                const reps = getNumericValue(e.actualReps) ?? getNumericValue(e.targetReps);
+                const weight = getNumericValue(e.actualWeight) ?? getNumericValue(e.targetWeight);
+    
+                if (duration) exerciseData.durationInMinutes = duration;
+                if (sets) exerciseData.sets = sets;
+                if (reps) exerciseData.reps = reps;
+                if (weight) exerciseData.weight = weight;
+    
+                return exerciseData;
+            })
+            .filter(Boolean); // Filter out any undefined/null entries if a map were to return them
         
         const formData = new FormData();
         formData.append('type', 'full_day');
@@ -472,7 +497,10 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
             const today = format(new Date(), 'yyyy-MM-dd');
             try {
                 const dayStorage = JSON.parse(localStorage.getItem(today) || '{}');
-                dayStorage.calories = (dayStorage.calories || 0) + calculatedCalories;
+                const existingCalories = dayStorage.calories || 0;
+                // Add the newly calculated calories to the existing total for the day
+                const updatedCalories = existingCalories + calculatedCalories;
+                dayStorage.calories = updatedCalories;
                 localStorage.setItem(today, JSON.stringify(dayStorage));
             } catch (error) {
                  localStorage.setItem(today, JSON.stringify({ calories: calculatedCalories }));
@@ -615,10 +643,8 @@ export function WorkoutCourse() {
                 daysPerWeek: savedPlan.length,
                 workoutType: workoutType,
             });
-            // We should load the existing plan into the setup component.
-            // For now, we will just reset it to simplify.
-            // A more advanced implementation would pass `savedPlan` to WorkoutPlanSetup
-            setSavedPlan(null);
+            // Don't reset the plan, pass it to the setup component for editing
+            // setSavedPlan(null); 
         }
     };
     
@@ -628,11 +654,9 @@ export function WorkoutCourse() {
     }
 
     if (courseConfig) {
-        return <WorkoutPlanSetup config={courseConfig} onSave={handleSavePlan} />;
+        // Pass savedPlan to allow editing the existing plan
+        return <WorkoutPlanSetup config={courseConfig} existingPlan={savedPlan} onSave={handleSavePlan} />;
     }
 
     return <CourseRegistration onCourseCreate={setCourseConfig} />;
 }
-
-    
-
