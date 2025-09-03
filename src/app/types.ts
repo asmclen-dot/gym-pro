@@ -54,3 +54,30 @@ export const FitnessReportOutputSchema = z.object({
     recommendations: z.string().describe("Actionable recommendations for the next period to improve results, in Arabic.")
 });
 export type FitnessReportOutput = z.infer<typeof FitnessReportOutputSchema>;
+
+export const SuggestFitnessGoalsInputSchema = z.object({
+  weight: z.number().describe('User weight in kilograms.'),
+  height: z.number().describe('User height in centimeters.'),
+  age: z.number().describe('User age in years.'),
+  gender: z.enum(['male', 'female']).describe('User gender.'),
+  goal: z
+    .enum(['lose_weight', 'maintain', 'gain_muscle'])
+    .describe('The user’s primary fitness goal.'),
+});
+export type SuggestFitnessGoalsInput = z.infer<
+  typeof SuggestFitnessGoalsInputSchema
+>;
+
+export const SuggestFitnessGoalsOutputSchema = z.object({
+  suggestedWeeklyCalories: z
+    .number()
+    .describe(
+      'The suggested total weekly calorie target based on the user’s goal.'
+    ),
+  suggestedDailySteps: z
+    .number()
+    .describe('The suggested daily step count target.'),
+});
+export type SuggestFitnessGoalsOutput = z.infer<
+  typeof SuggestFitnessGoalsOutputSchema
+>;

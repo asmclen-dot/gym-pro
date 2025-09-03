@@ -1,12 +1,14 @@
 'use server';
 
 import { generatePersonalizedRecipe, PersonalizedRecipeInput } from '@/ai/flows/personalized-recipe-generation';
-import { estimateWorkoutCalories, WorkoutCalorieEstimationInput, ExerciseDetail } from '@/ai/flows/workout-calorie-estimation';
+import { estimateWorkoutCalories, WorkoutCalorieEstimationInput } from '@/ai/flows/workout-calorie-estimation';
 import { z } from 'zod';
 import { generateWorkoutPlanFlow } from '@/ai/flows/generate-workout-plan';
 import { GenerateWorkoutPlanInput, GenerateWorkoutPlanOutput, GenerateWorkoutPlanInputSchema } from './types';
 import { generateFitnessReportFlow } from '@/ai/flows/generate-fitness-report';
 import { FitnessReportInput, FitnessReportInputSchema, FitnessReportOutput } from './types';
+import { suggestFitnessGoalsFlow } from '@/ai/flows/suggest-fitness-goals';
+import { SuggestFitnessGoalsInput, SuggestFitnessGoalsInputSchema, SuggestFitnessGoalsOutput } from './types';
 
 
 const recipeSchema = z.object({
@@ -212,6 +214,36 @@ export async function getReportAction(input: FitnessReportInput): Promise<Report
       data: null,
       error: `فشل إنشاء التقرير: ${errorMessage}`,
       message: 'فشل إنشاء الذكاء الاصطناعي.',
+    };
+  }
+}
+
+export type SuggestionState = {
+  data: SuggestFitnessGoalsOutput | null;
+  error: string | null;
+}
+
+export async function getGoalSuggestionAction(input: SuggestFitnessGoalsInput): Promise<SuggestionState> {
+  const validatedFields = SuggestFitnessGoalsInputSchema.safeParse(input);
+
+  if (!validatedFields.success) {
+    return {
+      data: null,
+      error: 'المدخلات غير صالحة. الرجاء التأكد من تعبئة جميع الحقول المطلوبة.',
+    }
+  }
+
+  try {
+    const suggestion = await suggestFitnessGoalsFlow(validatedFields.data);
+    return {
+      data: suggestion,
+      error: null,
+    };
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : 'حدث خطأ غير معروف.';
+    return {
+      data: null,
+      error: `فشل اقتراح الأهداف: ${errorMessage}`,
     };
   }
 }
