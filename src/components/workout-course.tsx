@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dumbbell, Heart, Combine, PlusCircle, Trash2, CheckSquare, Edit, BrainCircuit, Droplets, Clock, Weight, Repeat, Flame, Loader2, RefreshCw, PartyPopper, CheckCircle2 } from 'lucide-react';
+import { Dumbbell, Heart, Combine, PlusCircle, Trash2, CheckSquare, Edit, BrainCircuit, Droplets, Clock, Weight, Repeat, Flame, Loader2, RefreshCw, PartyPopper, CheckCircle2, Repeat1 } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
@@ -343,10 +343,10 @@ function WorkoutPlanSetup({ config, existingPlan, onSave, onCancel }: { config: 
                             ابحث عن تمرين أو أدخل اسمًا جديدًا وحدد تفاصيله.
                         </DialogDescription>
                     </DialogHeader>
-                     <div className="grid gap-4 py-4">
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
                         <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                             <PopoverTrigger asChild>
-                                <div className="space-y-2">
+                                <div className="space-y-2 sm:col-span-2">
                                     <Label htmlFor="exercise-name">اسم التمرين</Label>
                                     <Input
                                         id="exercise-name"
@@ -378,7 +378,7 @@ function WorkoutPlanSetup({ config, existingPlan, onSave, onCancel }: { config: 
                             </PopoverContent>
                         </Popover>
 
-                        <div className="space-y-2">
+                        <div className="space-y-2 sm:col-span-2">
                              <Label htmlFor="exercise-type">نوع التمرين</Label>
                              <Select
                                 value={newExercise.type}
@@ -396,7 +396,7 @@ function WorkoutPlanSetup({ config, existingPlan, onSave, onCancel }: { config: 
                         </div>
                         
                         {newExercise.type === 'strength' && (
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <>
                                 <div className="space-y-2">
                                     <Label htmlFor="weight">الوزن المستهدف (كغ)</Label>
                                     <Input id="weight" type="number" value={newExercise.targetWeight || ''} onChange={(e) => setNewExercise({ ...newExercise, targetWeight: parseInt(e.target.value) })} placeholder="10" />
@@ -405,14 +405,14 @@ function WorkoutPlanSetup({ config, existingPlan, onSave, onCancel }: { config: 
                                     <Label htmlFor="sets">المجموعات المستهدفة</Label>
                                     <Input id="sets" type="number" value={newExercise.targetSets || ''} onChange={(e) => setNewExercise({ ...newExercise, targetSets: parseInt(e.target.value) })} placeholder="3" />
                                 </div>
-                                <div className="space-y-2">
+                                <div className="space-y-2 sm:col-span-2">
                                     <Label htmlFor="reps">العدات المستهدفة</Label>
                                     <Input id="reps" type="number" value={newExercise.targetReps || ''} onChange={(e) => setNewExercise({ ...newExercise, targetReps: parseInt(e.target.value) })} placeholder="12" />
                                 </div>
-                            </div>
+                            </>
                         )}
                         {(newExercise.type === 'cardio' || newExercise.type === 'flexibility') && (
-                             <div className="space-y-2">
+                             <div className="space-y-2 sm:col-span-2">
                                 <Label htmlFor="duration">المدة المستهدفة (بالدقائق)</Label>
                                 <Input id="duration" type="number" value={newExercise.targetDuration || ''} onChange={(e) => setNewExercise({ ...newExercise, targetDuration: parseInt(e.target.value) })} placeholder="30" />
                             </div>
@@ -512,7 +512,7 @@ function WorkoutDayDisplay({ day, onPerformanceChange, onComplete, isLoading }: 
     );
 }
 
-function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset }: { progress: SavedProgress, onProgressChange: (newProgress: SavedProgress) => void, onEdit: () => void, onReset: () => void }) {
+function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset, onRestart }: { progress: SavedProgress, onProgressChange: (newProgress: SavedProgress) => void, onEdit: () => void, onReset: () => void, onRestart: () => void }) {
     const { plan, currentDay } = progress;
     const [isLoading, setIsLoading] = useState(false);
     const [caloriesResult, setCaloriesResult] = useState<number | null>(null);
@@ -607,16 +607,22 @@ function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset }: { p
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle className="font-headline text-2xl tracking-tight">تهانينا!</CardTitle>
-                    <CardDescription>لقد أكملت جميع أيام الكورس بنجاح.</CardDescription>
+                    <CardTitle className="font-headline text-2xl tracking-tight">تهانينا! لقد أكملت الكورس</CardTitle>
+                    <CardDescription>لقد قمت بعمل رائع! ماذا تريد أن تفعل الآن؟</CardDescription>
                 </CardHeader>
                 <CardContent className='flex flex-col items-center justify-center text-center gap-4 py-10'>
                     <PartyPopper className='h-20 w-20 text-primary animate-pulse' />
-                    <p className='text-lg font-semibold'>لقد قمت بعمل رائع! استمر في التقدم.</p>
-                    <Button onClick={onReset} size='lg'>
-                        <RefreshCw className='ml-2 h-5 w-5' />
-                        بدء كورس جديد
-                    </Button>
+                    <p className='text-lg font-semibold'>اختر خطوتك التالية للاستمرار في رحلتك.</p>
+                    <div className="flex flex-col sm:flex-row gap-4 w-full max-w-sm">
+                        <Button onClick={onRestart} size='lg' variant="secondary" className="w-full">
+                            <Repeat1 className='ml-2 h-5 w-5' />
+                            إعادة نفس الكورس
+                        </Button>
+                        <Button onClick={onReset} size='lg' className="w-full">
+                            <RefreshCw className='ml-2 h-5 w-5' />
+                            إنشاء كورس جديد
+                        </Button>
+                    </div>
                 </CardContent>
             </Card>
         )
@@ -737,6 +743,17 @@ export function WorkoutCourse() {
             });
         }
     };
+
+    const handleRestartCourse = () => {
+        if (savedProgress) {
+            const resetPlan = savedProgress.plan.map(day => ({
+                ...day,
+                exercises: day.exercises.map(ex => ({ ...ex, done: false, actualSets: '', actualReps: '', actualDuration: '', actualWeight: '' }))
+            }));
+            const newProgress: SavedProgress = { plan: resetPlan, currentDay: 1 };
+            handleProgressChange(newProgress);
+        }
+    };
     
     const handleResetPlan = () => {
         localStorage.removeItem('workoutProgress');
@@ -753,8 +770,10 @@ export function WorkoutCourse() {
     }
 
     if (savedProgress && !courseConfig) {
-        return <WorkoutPlanDisplay progress={savedProgress} onProgressChange={handleProgressChange} onEdit={handleEditPlan} onReset={handleResetPlan} />;
+        return <WorkoutPlanDisplay progress={savedProgress} onProgressChange={handleProgressChange} onEdit={handleEditPlan} onReset={handleResetPlan} onRestart={handleRestartCourse} />;
     }
+
+
 
     if (courseConfig) {
         return <WorkoutPlanSetup config={courseConfig} existingPlan={savedProgress?.plan} onSave={handleSavePlan} onCancel={handleCancelEdit} />;
@@ -762,3 +781,5 @@ export function WorkoutCourse() {
 
     return <CourseRegistration onCourseCreate={setCourseConfig} />;
 }
+
+    
