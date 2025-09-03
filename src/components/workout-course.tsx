@@ -502,7 +502,7 @@ function WorkoutDayDisplay({ day, onPerformanceChange, onComplete, isLoading }: 
                     <div className='flex justify-between items-center pt-4'>
                          <Button onClick={onComplete} disabled={isLoading || !allExercisesDone}>
                             {isLoading ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className='ml-2 h-4 w-4'/>}
-                            {isLoading ? 'جارٍ الحفظ...' : 'إكمال اليوم والانتقال للتالي'}
+                            {isLoading ? 'جارٍ الحفظ...' : 'إكمال اليوم'}
                         </Button>
                     </div>
                 </div>
@@ -514,6 +514,8 @@ function WorkoutDayDisplay({ day, onPerformanceChange, onComplete, isLoading }: 
 function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset }: { progress: SavedProgress, onProgressChange: (newProgress: SavedProgress) => void, onEdit: () => void, onReset: () => void }) {
     const { plan, currentDay } = progress;
     const [isLoading, setIsLoading] = useState(false);
+    const [caloriesResult, setCaloriesResult] = useState<number | null>(null);
+    const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
 
     const activeDayData = plan.find(d => d.day === currentDay);
     const isCourseFinished = !activeDayData;
@@ -559,11 +561,11 @@ function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset }: { p
                     if (reps) exerciseData.reps = reps;
                     if (weight) exerciseData.weight = weight;
                 }
-                // Only include if it has more than name and type
                 return Object.keys(exerciseData).length > 2 ? exerciseData : null;
             })
-            .filter(Boolean); // remove nulls
+            .filter(Boolean);
 
+        let calculatedCalories = 0;
         if (exercisesToCalculate.length > 0) {
             const formData = new FormData();
             formData.append('type', 'full_day');
@@ -572,27 +574,35 @@ function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset }: { p
             const result: WorkoutState = await getWorkoutCaloriesAction({ data: null, error: null, message: null }, formData);
             
             if (result.data) {
-                const calculatedCalories = result.data.estimatedCalories;
-                const today = format(new Date(), 'yyyy-MM-dd');
-                try {
-                    const dayStorage = JSON.parse(localStorage.getItem(today) || '{}');
-                    const existingCalories = dayStorage.calories || 0;
-                    dayStorage.calories = existingCalories + calculatedCalories;
-                    localStorage.setItem(today, JSON.stringify(dayStorage));
-                } catch (error) {
-                    // If parsing fails, just overwrite
-                    localStorage.setItem(today, JSON.stringify({ calories: calculatedCalories }));
-                }
+                calculatedCalories = result.data.estimatedCalories;
             } else {
-                // Handle error case, maybe log it
                 console.error("Failed to calculate calories:", result.error);
+            }
+        }
+        
+        setCaloriesResult(calculatedCalories);
+        setIsLoading(false);
+        setIsResultDialogOpen(true);
+    };
+
+    const handleConfirmAndProceed = () => {
+         if (caloriesResult !== null) {
+            const today = format(new Date(), 'yyyy-MM-dd');
+            try {
+                const dayStorage = JSON.parse(localStorage.getItem(today) || '{}');
+                const existingCalories = dayStorage.calories || 0;
+                dayStorage.calories = existingCalories + caloriesResult;
+                localStorage.setItem(today, JSON.stringify(dayStorage));
+            } catch (error) {
+                localStorage.setItem(today, JSON.stringify({ calories: caloriesResult }));
             }
         }
         
         // Move to next day
         onProgressChange({ ...progress, currentDay: currentDay + 1 });
-        setIsLoading(false);
-    };
+        setCaloriesResult(null);
+        setIsResultDialogOpen(false);
+    }
 
     if (isCourseFinished) {
         return (
@@ -614,25 +624,50 @@ function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset }: { p
     }
 
     return (
-        <Card>
-            <CardHeader className='flex-row items-center justify-between'>
-                <div>
-                    <CardTitle className="font-headline text-2xl tracking-tight">يوم التمرين {currentDay} من {plan.length}</CardTitle>
-                    <CardDescription>هذا هو تركيزك لليوم. بالتوفيق!</CardDescription>
-                </div>
-                 <div className="flex gap-2">
-                    <Button variant="outline" size="icon" onClick={onEdit}>
-                        <Edit className='h-5 w-5' />
-                        <span className='sr-only'>تعديل الكورس</span>
-                    </Button>
-                     <Button variant="destructive" size="icon" onClick={onReset}>
-                        <RefreshCw className='h-5 w-5' />
-                        <span className='sr-only'>إعادة تعيين الكورس</span>
-                    </Button>
-                </div>
-            </CardHeader>
-            {activeDayData && <WorkoutDayDisplay day={activeDayData} onPerformanceChange={handlePerformanceChange} onComplete={handleCompleteDay} isLoading={isLoading} />}
-        </Card>
+        <>
+            <Card>
+                <CardHeader className='flex-row items-center justify-between'>
+                    <div>
+                        <CardTitle className="font-headline text-2xl tracking-tight">يوم التمرين {currentDay} من {plan.length}</CardTitle>
+                        <CardDescription>هذا هو تركيزك لليوم. بالتوفيق!</CardDescription>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button variant="outline" size="icon" onClick={onEdit}>
+                            <Edit className='h-5 w-5' />
+                            <span className='sr-only'>تعديل الكورس</span>
+                        </Button>
+                        <Button variant="destructive" size="icon" onClick={onReset}>
+                            <RefreshCw className='h-5 w-5' />
+                            <span className='sr-only'>إعادة تعيين الكورس</span>
+                        </Button>
+                    </div>
+                </CardHeader>
+                {activeDayData && <WorkoutDayDisplay day={activeDayData} onPerformanceChange={handlePerformanceChange} onComplete={handleCompleteDay} isLoading={isLoading} />}
+            </Card>
+            
+            <Dialog open={isResultDialogOpen} onOpenChange={setIsResultDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>أحسنت! لقد أكملت تمرين اليوم!</DialogTitle>
+                        <DialogDescription>
+                            هذا هو تقدير السعرات الحرارية التي حرقتها في هذا التمرين.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex items-center justify-center gap-4 py-8">
+                        <Flame className="h-16 w-16 text-primary" />
+                        <div>
+                            <p className="text-muted-foreground">السعرات الحرارية المحروقة</p>
+                            <p className="text-5xl font-bold font-mono text-primary">{caloriesResult ?? 0}</p>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" className="w-full" onClick={handleConfirmAndProceed}>
+                             رائع! انتقل لليوم التالي
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </>
     );
 }
 
@@ -728,5 +763,7 @@ export function WorkoutCourse() {
 
     return <CourseRegistration onCourseCreate={setCourseConfig} />;
 }
+
+    
 
     
