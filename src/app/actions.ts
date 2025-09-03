@@ -46,40 +46,55 @@ export async function getRecipeAction(prevState: RecipeState, formData: FormData
   }
 }
 
-const workoutSchema = z.object({
+const workoutSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("time"),
     exerciseName: z.string().min(3, { message: 'يرجى إدخال اسم تمرين صالح.' }),
     durationInMinutes: z.coerce.number().min(1, { message: 'يجب أن تكون المدة دقيقة واحدة على الأقل.' }),
-});
+  }),
+  z.object({
+    type: z.literal("reps"),
+    exerciseName: z.string().min(3, { message: 'يرجى إدخال اسم تمرين صالح.' }),
+    sets: z.coerce.number().min(1, { message: 'يجب أن تكون هناك مجموعة واحدة على الأقل.' }),
+    reps: z.coerce.number().min(1, { message: 'يجب أن يكون هناك تكرار واحد على الأقل.' }),
+  }),
+]);
+
 
 export type WorkoutState = {
   data: Awaited<ReturnType<typeof estimateWorkoutCalories>> | null;
   error: string | null;
   message: string | null;
-  input?: {
-    exerciseName: string,
-    durationInMinutes: number
-  }
+  input?: WorkoutCalorieEstimationInput;
 };
 
 
 export async function getWorkoutCaloriesAction(prevState: WorkoutState, formData: FormData): Promise<WorkoutState> {
-  const validatedFields = workoutSchema.safeParse({
+  const type = formData.get('type') === 'reps' ? 'reps' : 'time';
+  
+  const rawData = {
+    type,
     exerciseName: formData.get('exerciseName'),
     durationInMinutes: formData.get('durationInMinutes'),
-  });
+    sets: formData.get('sets'),
+    reps: formData.get('reps'),
+  };
+
+  const validatedFields = workoutSchema.safeParse(rawData);
 
   if (!validatedFields.success) {
+    const errorMessages = validatedFields.error.errors.map(e => e.message).join(', ');
     return {
       data: null,
-      error: 'إدخال غير صالح. يرجى التحقق من الحقول.',
+      error: `إدخال غير صالح: ${errorMessages}`,
       message: 'فشل التحقق من الصحة.',
     };
   }
   
-  const input = validatedFields.data;
+  const { type: _type, ...input } = validatedFields.data;
 
   try {
-    const workoutCalories = await estimateWorkoutCalories(input as WorkoutCalorieEstimationInput);
+    const workoutCalories = await estimateWorkoutCalories(input);
     return {
       data: workoutCalories,
       error: null,

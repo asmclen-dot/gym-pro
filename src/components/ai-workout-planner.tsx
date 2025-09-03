@@ -8,8 +8,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Sparkles, Flame } from 'lucide-react';
+import { Loader2, Sparkles, Flame, Clock, Repeat } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 const initialState: WorkoutState = {
   data: null,
@@ -20,7 +21,7 @@ const initialState: WorkoutState = {
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending}>
+    <Button type="submit" disabled={pending} className="w-full sm:w-auto">
       {pending ? (
         <>
           <Loader2 className="ml-2 h-4 w-4 animate-spin" />
@@ -50,6 +51,30 @@ export function AIWorkoutPlanner() {
     }
   }, [state.error, toast]);
 
+  const renderResultText = () => {
+    if (!state.input) return null;
+    
+    const { exerciseName, durationInMinutes, sets, reps } = state.input;
+    
+    if (durationInMinutes) {
+      return (
+        <p className="text-sm text-muted-foreground">
+            تمرين <strong>{exerciseName}</strong> لمدة <strong>{durationInMinutes}</strong> دقيقة يحرق حوالي:
+        </p>
+      );
+    }
+    
+    if (sets && reps) {
+      return (
+        <p className="text-sm text-muted-foreground">
+          تمرين <strong>{exerciseName}</strong> لـ <strong>{sets}</strong> مجموعات وكل مجموعة <strong>{reps}</strong> عدات يحرق حوالي:
+        </p>
+      );
+    }
+    
+    return null;
+  }
+
   return (
     <Card className="shadow-sm">
       <form action={formAction}>
@@ -57,26 +82,63 @@ export function AIWorkoutPlanner() {
           <CardTitle className="font-headline tracking-tight">تقدير السعرات الحرارية للتمرين</CardTitle>
           <CardDescription>استخدم الذكاء الاصطناعي لتقدير حرق السعرات الحرارية لتمرينك.</CardDescription>
         </CardHeader>
-        <CardContent className="grid sm:grid-cols-3 gap-4">
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="exerciseName">اسم التمرين</Label>
-            <Input
-              id="exerciseName"
-              name="exerciseName"
-              placeholder="مثال: الجري، رفع الأثقال"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="durationInMinutes">المدة (بالدقائق)</Label>
-            <Input
-              id="durationInMinutes"
-              name="durationInMinutes"
-              type="number"
-              placeholder="مثال: 30"
-              required
-            />
-          </div>
+        <CardContent>
+          <Tabs defaultValue="time" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="time">
+                <Clock className="ml-2 h-4 w-4" />
+                بالوقت
+              </TabsTrigger>
+              <TabsTrigger value="reps">
+                <Repeat className="ml-2 h-4 w-4" />
+                بالعدات
+              </TabsTrigger>
+            </TabsList>
+            <div className="space-y-2 mt-4">
+              <Label htmlFor="exerciseName">اسم التمرين</Label>
+              <Input
+                id="exerciseName"
+                name="exerciseName"
+                placeholder="مثال: الجري، ضغط البنش"
+                required
+              />
+            </div>
+            <TabsContent value="time" className="mt-4">
+              <input type="hidden" name="type" value="time" />
+              <div className="space-y-2">
+                <Label htmlFor="durationInMinutes">المدة (بالدقائق)</Label>
+                <Input
+                  id="durationInMinutes"
+                  name="durationInMinutes"
+                  type="number"
+                  placeholder="مثال: 30"
+                />
+              </div>
+            </TabsContent>
+            <TabsContent value="reps" className="mt-4">
+              <input type="hidden" name="type" value="reps" />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="sets">المجموعات (Sets)</Label>
+                  <Input
+                    id="sets"
+                    name="sets"
+                    type="number"
+                    placeholder="مثال: 3"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reps">العدات (Reps)</Label>
+                  <Input
+                    id="reps"
+                    name="reps"
+                    type="number"
+                    placeholder="مثال: 12"
+                  />
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
         <CardFooter>
           <SubmitButton />
@@ -90,9 +152,7 @@ export function AIWorkoutPlanner() {
                 <Flame className="h-8 w-8 text-primary" />
             </div>
             <div className='text-right'>
-                <p className="text-sm text-muted-foreground">
-                    تمرين <strong>{state.input?.exerciseName}</strong> لمدة <strong>{state.input?.durationInMinutes}</strong> دقيقة يحرق حوالي:
-                </p>
+                {renderResultText()}
                 <p className="text-3xl font-bold font-mono text-primary">{state.data.estimatedCalories} <span className="text-lg">سعر حراري</span></p>
             </div>
           </div>
