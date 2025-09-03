@@ -1,7 +1,7 @@
 'use server';
 
 import { generatePersonalizedRecipe, PersonalizedRecipeInput } from '@/ai/flows/personalized-recipe-generation';
-import { estimateWorkoutCalories, WorkoutCalorieEstimationInput } from '@/ai/flows/workout-calorie-estimation';
+import { estimateWorkoutCalories, WorkoutCalorieEstimationInput, ExerciseDetail } from '@/ai/flows/workout-calorie-estimation';
 import { z } from 'zod';
 
 const recipeSchema = z.object({
@@ -46,6 +46,16 @@ export async function getRecipeAction(prevState: RecipeState, formData: FormData
   }
 }
 
+const exerciseDetailSchema = z.object({
+  name: z.string(),
+  type: z.enum(['strength', 'cardio', 'flexibility']),
+  sets: z.number().optional(),
+  reps: z.number().optional(),
+  durationInMinutes: z.number().optional(),
+  weight: z.number().optional(),
+});
+
+
 const workoutSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("time"),
@@ -57,6 +67,29 @@ const workoutSchema = z.discriminatedUnion("type", [
     exerciseName: z.string().min(3, { message: 'يرجى إدخال اسم تمرين صالح.' }),
     sets: z.coerce.number().min(1, { message: 'يجب أن تكون هناك مجموعة واحدة على الأقل.' }),
     reps: z.coerce.number().min(1, { message: 'يجب أن يكون هناك تكرار واحد على الأقل.' }),
+  }),
+  z.object({
+    type: z.literal("full_day"),
+    exercises: z.string().transform((str, ctx) => {
+      try {
+        const parsed = JSON.parse(str);
+        const validated = z.array(exerciseDetailSchema).safeParse(parsed);
+        if (!validated.success) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Invalid exercise structure in JSON string.",
+          });
+          return z.NEVER;
+        }
+        return validated.data as ExerciseDetail[];
+      } catch (e) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Invalid JSON string for exercises.",
+        });
+        return z.NEVER;
+      }
+    }),
   }),
 ]);
 
@@ -70,15 +103,20 @@ export type WorkoutState = {
 
 
 export async function getWorkoutCaloriesAction(prevState: WorkoutState, formData: FormData): Promise<WorkoutState> {
-  const type = formData.get('type') === 'reps' ? 'reps' : 'time';
+  const type = formData.get('type');
   
-  const rawData = {
+  const rawData: Record<string, any> = {
     type,
-    exerciseName: formData.get('exerciseName'),
-    durationInMinutes: formData.get('durationInMinutes'),
-    sets: formData.get('sets'),
-    reps: formData.get('reps'),
   };
+
+  if (type === 'full_day') {
+    rawData.exercises = formData.get('exercises');
+  } else {
+    rawData.exerciseName = formData.get('exerciseName');
+    rawData.durationInMinutes = formData.get('durationInMinutes');
+    rawData.sets = formData.get('sets');
+    rawData.reps = formData.get('reps');
+  }
 
   const validatedFields = workoutSchema.safeParse(rawData);
 
@@ -94,12 +132,12 @@ export async function getWorkoutCaloriesAction(prevState: WorkoutState, formData
   const { type: _type, ...input } = validatedFields.data;
 
   try {
-    const workoutCalories = await estimateWorkoutCalories(input);
+    const workoutCalories = await estimateWorkoutCalories(input as WorkoutCalorieEstimationInput);
     return {
       data: workoutCalories,
       error: null,
       message: 'تم حساب السعرات الحرارية بنجاح!',
-      input,
+      input: input as WorkoutCalorieEstimationInput,
     };
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : 'حدث خطأ غير معروف.';
@@ -107,7 +145,7 @@ export async function getWorkoutCaloriesAction(prevState: WorkoutState, formData
       data: null,
       error: `فشل حساب السعرات الحرارية: ${errorMessage}`,
       message: 'فشل إنشاء الذكاء الاصطناعي.',
-      input
+      input: input as WorkoutCalorieEstimationInput
     };
   }
 }

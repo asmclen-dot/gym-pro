@@ -6,31 +6,40 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dumbbell, Heart, Combine, PlusCircle, Trash2, CheckSquare, Edit, BrainCircuit, Droplets, Clock, Weight, Repeat } from 'lucide-react';
+import { Dumbbell, Heart, Combine, PlusCircle, Trash2, CheckSquare, Edit, BrainCircuit, Droplets, Clock, Weight, Repeat, Flame, Loader2 } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { getWorkoutCaloriesAction, WorkoutState } from '@/app/actions';
 
 const exerciseList = [
     // Chest
     "ضغط البنش (Bench Press)", "ضغط البنش المائل (Incline Bench Press)", "ضغط البنش المنحدر (Decline Bench Press)", "ضغط البنش بالدمبل (Dumbbell Bench Press)", "ضغط البنش المائل بالدمبل (Incline Dumbbell Press)", "تفتيح بالدمبل (Dumbbell Flyes)", "تفتيح مائل بالدمبل (Incline Dumbbell Flyes)", "تفتيح بالكابل (Cable Crossover)", "غطس للصدر (Chest Dips)", "ضغط على الأرض (Push-up)", "ضغط على الأرض بقبضة واسعة (Wide-grip Push-up)", "ضغط على الأرض بقبضة ضيقة (Narrow-grip Push-up)", "آلة تفتيح الصدر (Pec-Deck Machine)", "آلة ضغط الصدر (Chest Press Machine)", "ضغط بالبار على آلة سميث (Smith Machine Bench Press)", "ضغط جيلوتين (Guillotine Press)",
     // Back
-    "الرفعة الميتة (Deadlift)", "سحب علوي (Pull-up)", "سحب علوي بقبضة واسعة (Wide-grip Pull-up)", "شين أب (Chin-up)", "تجديف بالبار (Barbell Row)", "تجديف بالبار بقبضة معكوسة (Pendlay Row)", "تجديف بالدمبل بذراع واحدة (One-Arm Dumbbell Row)", "سحب أرضي (Seated Cable Row)", "سحب أمامي (Lat Pulldown)", "سحب خلفي (Behind-the-neck Lat Pulldown)", "تمرين التي-بار (T-Bar Row)", "تمرين السوبرمان (Superman)", "تمرين الجسر (Glute Bridge)", "هايبر اكستنشن (Back Extension)", "تجديف مقلوب (Inverted Row)", "سحب أمامي بقبضة ضيقة (Close-grip Lat Pulldown)",
+    "الرفعة الميتة (Deadlift)", "سحب علوي (Pull-up)", "سحب علوي بقبضة واسعة (Wide-grip Pull-up)", "شين أب (Chin-up)", "تجديف بالبار (Barbell Row)", "تجديف بالبار بقبضة معكوسة (Pendlay Row)", "تجديف بالدمبل بذراع واحدة (One-Arm Dumbbell Row)", "سحب أرضي (Seated Cable Row)", "سحب أمامي (Lat Pulldown)", "سحب خلفي (Behind-the-neck Lat Pulldown)", "تمرين التي-بار (T-Bar Row)", "تمرين السوبرمان (Superman)", "تمرين الجسر (Glute Bridge)", "هايبر اكستنشن (Back Extension)", "تجديف مقلوب (Inverted Row)", "سحب أمامي بقبضة ضيقة (Close-grip Lat Pulldown)", "تمرين الوجه بالسحب (Face Pull)", "تمرين Kroc Rows", "تمرين Good Mornings", "تجديف آلة سميث (Smith Machine Row)",
     // Legs
-    "سكوات (Squat)", "سكوات أمامي (Front Squat)", "سكوات بلغاري (Bulgarian Split Squat)", "ضغط الأرجل (Leg Press)", "اندفاع (Lunge)", "اندفاع جانبي (Side Lunge)", "رفعة رومانية مميتة (Romanian Deadlift)", "رفعة مميتة بساق واحدة (Single Leg Deadlift)", "تجعيد أوتار الركبة (Hamstring Curl)", "تمديد الساق (Leg Extension)", "رفع السمانة (Calf Raise)", "آلة خطف الفخذ (Hip Abduction Machine)", "آلة ضم الفخذ (Hip Adduction Machine)", "سكوات هاك (Hack Squat)", "سكوات القرفصاء (Goblet Squat)", "خطوات الصندوق (Box Step-ups)",
+    "سكوات (Squat)", "سكوات أمامي (Front Squat)", "سكوات بلغاري (Bulgarian Split Squat)", "ضغط الأرجل (Leg Press)", "اندفاع (Lunge)", "اندفاع جانبي (Side Lunge)", "رفعة رومانية مميتة (Romanian Deadlift)", "رفعة مميتة بساق واحدة (Single Leg Deadlift)", "تجعيد أوتار الركبة (Hamstring Curl)", "تمديد الساق (Leg Extension)", "رفع السمانة (Calf Raise)", "آلة خطف الفخذ (Hip Abduction Machine)", "آلة ضم الفخذ (Hip Adduction Machine)", "سكوات هاك (Hack Squat)", "سكوات القرفصاء (Goblet Squat)", "خطوات الصندوق (Box Step-ups)", "سكوات Zercher", "سكوات Sissy", "قفزة الصندوق (Box Jump)",
     // Shoulders
-    "ضغط الأكتاف (Overhead Press)", "ضغط الأكتاكف بالدمبل (Dumbbell Shoulder Press)", "ضغط أرنولد (Arnold Press)", "رفع جانبي (Lateral Raise)", "رفع أمامي (Front Raise)", "رفع جانبي بالكابل (Cable Lateral Raise)", "تجديف عمودي (Upright Row)", "شراغز بالبار (Barbell Shrugs)", "شراغز بالدمبل (Dumbbell Shrugs)", "فيس بول (Face Pull)", "رفرفة عكسية (Reverse Pec-Deck)", "رفرفة عكسية بالدمبل (Bent-over Dumbbell Reverse Fly)", "بايك بوش أب (Pike Push-up)",
+    "ضغط الأكتاف (Overhead Press)", "ضغط الأكتاكف بالدمبل (Dumbbell Shoulder Press)", "ضغط أرنولد (Arnold Press)", "رفع جانبي (Lateral Raise)", "رفع أمامي (Front Raise)", "رفع جانبي بالكابل (Cable Lateral Raise)", "تجديف عمودي (Upright Row)", "شراغز بالبار (Barbell Shrugs)", "شراغز بالدمبل (Dumbbell Shrugs)", "فيس بول (Face Pull)", "رفرفة عكسية (Reverse Pec-Deck)", "رفرفة عكسية بالدمبل (Bent-over Dumbbell Reverse Fly)", "بايك بوش أب (Pike Push-up)", "ضغط Landmine", "رفع أمامي بالطبق (Plate Front Raise)", "رفع جانبي منحني (Bent-over Lateral Raise)",
     // Biceps
-    "تجعيد العضلة ذات الرأسين بالبار (Barbell Bicep Curl)", "تجعيد العضلة ذات الرأسين بالدمبل (Dumbbell Bicep Curl)", "تجعيد هامر (Hammer Curl)", "تجعيد بريتشر (Preacher Curl)", "تجعيد التركيز (Concentration Curl)", "تجعيد بالكابل (Cable Curl)", "شين أب بقبضة ضيقة (Close-grip Chin-up)", "تجعيد Zottman", "تجعيد العنكبوت (Spider Curl)",
+    "تجعيد العضلة ذات الرأسين بالبار (Barbell Bicep Curl)", "تجعيد العضلة ذات الرأسين بالدمبل (Dumbbell Bicep Curl)", "تجعيد هامر (Hammer Curl)", "تجعيد بريتشر (Preacher Curl)", "تجعيد التركيز (Concentration Curl)", "تجعيد بالكابل (Cable Curl)", "شين أب بقبضة ضيقة (Close-grip Chin-up)", "تجعيد Zottman", "تجعيد العنكبوت (Spider Curl)", "تجعيد عكسي (Reverse Curl)", "تجعيد السحب العالي (High Cable Curl)",
     // Triceps
-    "ترايسبس بوشดาวน์ (Tricep Pushdown)", "ترايسبس اكستنشن بالدمبل (Dumbbell Tricep Extension)", "ترايسبس اكستنشن بالكابل (Cable Tricep Extension)", "ضغط البنش بقبضة ضيقة (Close-Grip Bench Press)", "غطس للترايسبس (Tricep Dips)", "تمرين الكيك باك (Tricep Kickback)", "سكال كراشر (Skull Crusher)", "ترايسبس اكستنشن فوق الرأس (Overhead Tricep Extension)",
+    "ترايسبس بوشดาวน์ (Tricep Pushdown)", "ترايسبس اكستنشن بالدمبل (Dumbbell Tricep Extension)", "ترايسبس اكستنشن بالكابل (Cable Tricep Extension)", "ضغط البنش بقبضة ضيقة (Close-Grip Bench Press)", "غطس للترايسبس (Tricep Dips)", "تمرين الكيك باك (Tricep Kickback)", "سكال كراشر (Skull Crusher)", "ترايسبس اكستنشن فوق الرأس (Overhead Tricep Extension)", "ضغط JM", "ترايسبس اكستنشن بذراع واحدة (One-arm Tricep Extension)",
     // Core
-    "تمرين المعدة (Crunch)", "رفع الساق (Leg Raise)", "بلانك (Plank)", "بلانك جانبي (Side Plank)", "تمرين الدراجة الهوائية (Bicycle Crunch)", "تمرين متسلق الجبال (Mountain Climbers)", "تمرين لمس أصابع القدم (Toe Touches)", "تمرين قاطع الخشب (Woodchoppers)", "تمرين العلم الروسي (Russian Twist)", "تمرين الـ V-up", "تمرين الـ Ab Rollout", "رفع الركبة المعلق (Hanging Knee Raise)", "البلانك المفرغ (Hollow Body Hold)",
+    "تمرين المعدة (Crunch)", "رفع الساق (Leg Raise)", "بلانك (Plank)", "بلانك جانبي (Side Plank)", "تمرين الدراجة الهوائية (Bicycle Crunch)", "تمرين متسلق الجبال (Mountain Climbers)", "تمرين لمس أصابع القدم (Toe Touches)", "تمرين قاطع الخشب (Woodchoppers)", "تمرين العلم الروسي (Russian Twist)", "تمرين الـ V-up", "تمرين الـ Ab Rollout", "رفع الركبة المعلق (Hanging Knee Raise)", "البلانك المفرغ (Hollow Body Hold)", "تمرين Bird Dog", "تمرين Dead Bug", "تمرين Pallof Press",
     // Cardio
-    "جري (Running)", "هرولة (Jogging)", "مشي سريع (Brisk Walking)", "ركوب الدراجة (Cycling)", "ركوب الدراجة الثابتة (Stationary Bike)", "سباحة (Swimming)", "جهاز الإليبتيكال (Elliptical Trainer)", "نط الحبل (Jumping Rope)", "صعود السلالم (Stair Climbing)", "آلة التجديف (Rowing Machine)", "تمارين عالية الكثافة (HIIT)", "بيربيز (Burpees)", "قفز الرافعات (Jumping Jacks)", "صندوق القفز (Box Jumps)", "ضرب الحبال (Battle Ropes)", "كيتل بيل سوينغ (Kettlebell Swings)",
+    "جري (Running)", "هرولة (Jogging)", "مشي سريع (Brisk Walking)", "ركوب الدراجة (Cycling)", "ركوب الدراجة الثابتة (Stationary Bike)", "سباحة (Swimming)", "جهاز الإليبتيكال (Elliptical Trainer)", "نط الحبل (Jumping Rope)", "صعود السلالم (Stair Climbing)", "آلة التجديف (Rowing Machine)", "تمارين عالية الكثافة (HIIT)", "بيربيز (Burpees)", "قفز الرافعات (Jumping Jacks)", "صندوق القفز (Box Jumps)", "ضرب الحبال (Battle Ropes)", "كيتل بيل سوينغ (Kettlebell Swings)", "جري سريع (Sprints)", "آلة VersaClimber",
     // Stretching & Flexibility
-    "تمدد أوتار الركبة (Hamstring Stretch)", "تمدد عضلات الفخذ الرباعية (Quad Stretch)", "تمدد الصدر (Chest Stretch)", "تمدد الكتف (Shoulder Stretch)", "تمدد الظهر (Cat-Cow Stretch)", "تمدد عضلة الحمامة (Pigeon Pose)", "تمدد الكوبرا (Cobra Pose)", "وضعية الطفل (Child's Pose)", "يوجا (Yoga)", "بيلاتس (Pilates)", "تمدد الفراشة (Butterfly Stretch)", "تمدد الترايسبس (Triceps Stretch)", "لمس أصابع القدمين وقوفاً (Standing Toe Touch)"
+    "تمدد أوتار الركبة (Hamstring Stretch)", "تمدد عضلات الفخذ الرباعية (Quad Stretch)", "تمدد الصدر (Chest Stretch)", "تمدد الكتف (Shoulder Stretch)", "تمدد الظهر (Cat-Cow Stretch)", "تمدد عضلة الحمامة (Pigeon Pose)", "تمدد الكوبرا (Cobra Pose)", "وضعية الطفل (Child's Pose)", "يوجا (Yoga)", "بيلاتس (Pilates)", "تمدد الفراشة (Butterfly Stretch)", "تمدد الترايسبس (Triceps Stretch)", "لمس أصابع القدمين وقوفاً (Standing Toe Touch)", "تمدد Glute Bridge", "تمدد Figure-Four", "تمدد Bretzel", "تمدد World's Greatest Stretch", "Foam Rolling",
+    // Full Body
+    "الرفعة الأولمبية (Clean and Jerk)", "خطف (Snatch)", "تمرين Thruster", "تمرين Farmer's Walk", "تمرين Tire Flip", "تمرين Sled Push/Pull", "تمرين Wall Ball", "تمرين Turkish Get-up", "تمرين Man Maker",
+    // Abs (additional)
+    "تمرين Side Crunch", "تمرين Reverse Crunch", "تمرين Cable Crunch", "تمرين Plank with Hip Dips", "تمرين Flutter Kicks", "تمرين Scissor Kicks", "تمرين Hanging Leg Raise", "تمرين Decline Crunch", "تمرين Abdominal Hold",
+    // Calves (additional)
+    "رفع السمانة جلوسًا (Seated Calf Raise)", "رفع السمانة على آلة ضغط الأرجل (Leg Press Calf Raise)", "رفع السمانة بذراع واحدة بالدمبل (Single-leg Dumbbell Calf Raise)", "رفع السمانة وقوفًا على آلة سميث (Smith Machine Standing Calf Raise)",
+    // Forearms (additional)
+    "تجعيد المعصم (Wrist Curl)", "تجعيد المعصم العكسي (Reverse Wrist Curl)", "تمرين Plate Pinch", "تمرين Gripper", "تمرين Behind-the-back Barbell Wrist Curl"
 ];
 
 interface CourseConfig {
@@ -39,6 +48,7 @@ interface CourseConfig {
 }
 
 interface Exercise {
+    id: string;
     name: string;
     type: 'strength' | 'cardio' | 'flexibility';
     sets?: number;
@@ -140,7 +150,7 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
 
     const filteredExercises = useMemo(() =>
         searchTerm
-            ? exerciseList.filter(ex => ex.toLowerCase().includes(searchTerm.toLowerCase()))
+            ? exerciseList.filter(ex => ex.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 10) // Limit results
             : [],
         [searchTerm]
     );
@@ -156,6 +166,7 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
         if (!selectedDay || !newExercise.name || !newExercise.type) return;
 
         const finalExercise: Exercise = {
+            id: crypto.randomUUID(),
             name: newExercise.name,
             type: newExercise.type,
             sets: newExercise.type === 'strength' ? Number(newExercise.sets || 3) : undefined,
@@ -174,11 +185,11 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
         setIsDialogOpen(false);
     };
 
-    const handleRemoveExercise = (dayNumber: number, exerciseIndex: number) => {
+    const handleRemoveExercise = (dayNumber: number, exerciseId: string) => {
         setWorkoutDays(currentDays =>
             currentDays.map(day =>
                 day.day === dayNumber
-                    ? { ...day, exercises: day.exercises.filter((_, i) => i !== exerciseIndex) }
+                    ? { ...day, exercises: day.exercises.filter((ex) => ex.id !== exerciseId) }
                     : day
             )
         );
@@ -218,12 +229,12 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
                 </CardHeader>
                 <CardContent>
                     <Accordion type="multiple" defaultValue={['day-1']} className="w-full">
-                        {workoutDays.map(({ day, exercises }) => (
+                        {workoutDays.map(({ day, exercises, targetTime }) => (
                             <AccordionItem value={`day-${day}`} key={day}>
                                 <AccordionTrigger className="text-lg font-semibold">
                                     <div className='flex items-center justify-between w-full pr-2'>
                                         <span>يوم التمرين {day}</span>
-                                        <Select onValueChange={(value) => handleTargetTimeChange(day, value as WorkoutDay['targetTime'])}>
+                                        <Select onValueChange={(value) => handleTargetTimeChange(day, value as WorkoutDay['targetTime'])} value={targetTime || undefined}>
                                             <SelectTrigger className="w-[150px] h-9 text-sm" onClick={(e) => e.stopPropagation()}>
                                                 <SelectValue placeholder="وقت التمرين" />
                                             </SelectTrigger>
@@ -242,8 +253,8 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
                                         </div>
                                     ) : (
                                         <div className="space-y-3">
-                                            {exercises.map((ex, index) => (
-                                                 <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 group">
+                                            {exercises.map((ex) => (
+                                                 <div key={ex.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 group">
                                                     <div className='flex items-center gap-3'>
                                                         <div className={cn("p-2 rounded-full", 
                                                           ex.type === 'strength' ? 'bg-primary/20' : 
@@ -261,7 +272,7 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
                                                             </p>
                                                         </div>
                                                     </div>
-                                                    <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => handleRemoveExercise(day, index)}>
+                                                    <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => handleRemoveExercise(day, ex.id)}>
                                                         <Trash2 className="h-4 w-4 text-destructive" />
                                                     </Button>
                                                 </div>
@@ -300,7 +311,7 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
                                     <Label htmlFor="exercise-name">اسم التمرين</Label>
                                     <Input
                                         id="exercise-name"
-                                        value={searchTerm}
+                                        value={newExercise.name || ''}
                                         onChange={handleSearchChange}
                                         placeholder="اكتب للبحث عن تمرين..."
                                         autoComplete="off"
@@ -380,7 +391,29 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
     )
 }
 
-function WorkoutPlanDisplay({ plan, onEdit }: { plan: WorkoutDay[], onEdit: () => void }) {
+function WorkoutPlanDisplay({ plan, onEdit, onCalculateCalories }: { plan: WorkoutDay[], onEdit: () => void, onCalculateCalories: (exercises: Exercise[]) => void }) {
+    const [dailyCalories, setDailyCalories] = useState<Record<number, number | null>>({});
+    const [loadingDay, setLoadingDay] = useState<number | null>(null);
+
+    const handleCalculate = async (dayNumber: number, exercises: Exercise[]) => {
+        setLoadingDay(dayNumber);
+        const formData = new FormData();
+        formData.append('type', 'full_day');
+        formData.append('exercises', JSON.stringify(exercises.map(e => ({ name: e.name, durationInMinutes: e.duration, sets: e.sets, reps: e.reps, weight: e.weight, type: e.type }))));
+        
+        // This is a simplified way to call the action. In a real app, you might handle state more globally.
+        const result: WorkoutState = await getWorkoutCaloriesAction({ data: null, error: null, message: null }, formData);
+        
+        if (result.data) {
+            setDailyCalories(prev => ({ ...prev, [dayNumber]: result.data.estimatedCalories }));
+        } else {
+            // Handle error, maybe show a toast
+            console.error(result.error);
+            setDailyCalories(prev => ({ ...prev, [dayNumber]: -1 })); // Use -1 to indicate an error
+        }
+        setLoadingDay(null);
+    };
+    
     return (
         <Card>
             <CardHeader className='flex-row items-center justify-between'>
@@ -410,8 +443,8 @@ function WorkoutPlanDisplay({ plan, onEdit }: { plan: WorkoutDay[], onEdit: () =
                                     </div>
                                 ) : (
                                     <div className="space-y-3">
-                                        {exercises.map((ex, index) => (
-                                             <div key={index} className="flex flex-col p-3 rounded-lg bg-secondary/50 gap-3">
+                                        {exercises.map((ex) => (
+                                             <div key={ex.id} className="flex flex-col p-3 rounded-lg bg-secondary/50 gap-3">
                                                 <div className="flex items-center justify-between">
                                                     <div className='flex items-center gap-3'>
                                                          <div className={cn("p-2 rounded-full", 
@@ -431,8 +464,8 @@ function WorkoutPlanDisplay({ plan, onEdit }: { plan: WorkoutDay[], onEdit: () =
                                                         </div>
                                                     </div>
                                                      <div className="flex items-center gap-2">
-                                                        <Label htmlFor={`ex-done-${day}-${index}`} className='cursor-pointer text-sm font-semibold'>تم</Label>
-                                                        <Input type='checkbox' id={`ex-done-${day}-${index}`} className='h-5 w-5 accent-primary' />
+                                                        <Label htmlFor={`ex-done-${ex.id}`} className='cursor-pointer text-sm font-semibold'>تم</Label>
+                                                        <Input type='checkbox' id={`ex-done-${ex.id}`} className='h-5 w-5 accent-primary' />
                                                     </div>
                                                 </div>
                                                 {/* Daily Performance Logging */}
@@ -458,6 +491,18 @@ function WorkoutPlanDisplay({ plan, onEdit }: { plan: WorkoutDay[], onEdit: () =
                                                 </div>
                                             </div>
                                         ))}
+                                        <div className='flex justify-between items-center pt-4'>
+                                             <Button onClick={() => handleCalculate(day, exercises)} disabled={loadingDay === day}>
+                                                {loadingDay === day ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Flame className='ml-2 h-4 w-4'/>}
+                                                {loadingDay === day ? 'جارٍ الحساب...' : 'حساب سعرات اليوم'}
+                                            </Button>
+                                            {dailyCalories[day] && dailyCalories[day]! > 0 && (
+                                                <p className='font-bold text-lg text-primary'>{dailyCalories[day]} سعر حراري</p>
+                                            )}
+                                            {dailyCalories[day] === -1 && (
+                                                <p className='font-bold text-sm text-destructive'>فشل الحساب</p>
+                                            )}
+                                        </div>
                                     </div>
                                 )}
                             </AccordionContent>
@@ -490,12 +535,19 @@ export function WorkoutCourse() {
                 daysPerWeek: savedPlan.length,
                 workoutType: workoutType,
             });
+            // When editing, we should probably load the existing plan into the setup component
+            // For simplicity now, we just reset it.
             setSavedPlan(null);
         }
     };
     
+    const handleCalculateCalories = (exercises: Exercise[]) => {
+        // This is a placeholder for triggering the server action
+        console.log("Calculating calories for:", exercises);
+    };
+
     if (savedPlan) {
-        return <WorkoutPlanDisplay plan={savedPlan} onEdit={handleEditPlan} />;
+        return <WorkoutPlanDisplay plan={savedPlan} onEdit={handleEditPlan} onCalculateCalories={handleCalculateCalories} />;
     }
 
     if (courseConfig) {

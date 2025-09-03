@@ -53,6 +53,14 @@ export function AIWorkoutPlanner() {
 
   const renderResultText = () => {
     if (!state.input) return null;
+
+    if (Array.isArray(state.input.exercises) && state.input.exercises.length > 0) {
+      return (
+        <p className="text-sm text-muted-foreground">
+            إجمالي السعرات الحرارية المحروقة لهذا اليوم يقدر بـ:
+        </p>
+      );
+    }
     
     const { exerciseName, durationInMinutes, sets, reps } = state.input;
     
