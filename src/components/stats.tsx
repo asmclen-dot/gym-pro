@@ -6,14 +6,8 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from 
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-const chartData = [
-  { day: "الاثنين", calories: 800, steps: 5000 },
-  { day: "الثلاثاء", calories: 1200, steps: 7500 },
-  { day: "الأربعاء", calories: 950, steps: 6000 },
-  { day: "الخميس", calories: 1500, steps: 10000 },
-  { day: "الجمعة", calories: 1300, steps: 8500 },
-  { day: "السبت", calories: 1800, steps: 12000 },
-  { day: "الأحد", calories: 1600, steps: 9000 },
+const chartData: { day: string, calories: number, steps: number }[] = [
+  // البيانات النموذجية تم إزالتها
 ]
 
 const chartConfig = {
@@ -31,7 +25,7 @@ export function Stats() {
   const totalCalories = chartData.reduce((acc, curr) => acc + curr.calories, 0);
   const totalSteps = chartData.reduce((acc, curr) => acc + curr.steps, 0);
   const points = Math.floor(totalCalories / 10 + totalSteps / 100);
-  const streak = 4;
+  const streak = 0; // تم تعديل القيمة الأولية
 
   return (
     <Card className="shadow-sm">
@@ -70,45 +64,52 @@ export function Stats() {
               <span className="text-2xl font-bold font-mono">{streak}</span>
             </div>
         </div>
-
-        <Tabs defaultValue="calories" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="calories">السعرات الحرارية</TabsTrigger>
-            <TabsTrigger value="steps">الخطوات</TabsTrigger>
-          </TabsList>
-          <TabsContent value="calories">
-            <div className="h-[250px] w-full pt-4">
-              <ChartContainer config={chartConfig} className="w-full h-full">
-                <BarChart data={chartData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                  <XAxis dataKey="day" tickLine={false} axisLine={false} tickMargin={8} />
-                  <YAxis tickLine={false} axisLine={false} tickMargin={8} width={80} />
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent indicator="dot" />}
-                  />
-                  <Bar dataKey="calories" fill="var(--color-calories)" radius={4} />
-                </BarChart>
-              </ChartContainer>
-            </div>
-          </TabsContent>
-          <TabsContent value="steps">
-            <div className="h-[250px] w-full pt-4">
-              <ChartContainer config={chartConfig} className="w-full h-full">
-                <BarChart data={chartData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                  <XAxis dataKey="day" tickLine={false} axisLine={false} tickMargin={8} />
-                  <YAxis tickLine={false} axisLine={false} tickMargin={8} width={80} />
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent indicator="dot" />}
-                  />
-                  <Bar dataKey="steps" fill="var(--color-steps)" radius={4} />
-                </BarChart>
-              </ChartContainer>
-            </div>
-          </TabsContent>
-        </Tabs>
+        {chartData.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
+            <BarChart className="h-20 w-20" />
+            <p className="mt-4 text-sm">لا توجد بيانات متاحة لهذا الأسبوع.</p>
+            <p className="text-xs">ابدأ في تسجيل أنشطتك لرؤية تقدمك.</p>
+          </div>
+        ) : (
+          <Tabs defaultValue="calories" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="calories">السعرات الحرارية</TabsTrigger>
+              <TabsTrigger value="steps">الخطوات</TabsTrigger>
+            </TabsList>
+            <TabsContent value="calories">
+              <div className="h-[250px] w-full pt-4">
+                <ChartContainer config={chartConfig} className="w-full h-full">
+                  <BarChart data={chartData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                    <XAxis dataKey="day" tickLine={false} axisLine={false} tickMargin={8} />
+                    <YAxis tickLine={false} axisLine={false} tickMargin={8} width={80} />
+                    <ChartTooltip
+                      cursor={false}
+                      content={<ChartTooltipContent indicator="dot" />}
+                    />
+                    <Bar dataKey="calories" fill="var(--color-calories)" radius={4} />
+                  </BarChart>
+                </ChartContainer>
+              </div>
+            </TabsContent>
+            <TabsContent value="steps">
+              <div className="h-[250px] w-full pt-4">
+                <ChartContainer config={chartConfig} className="w-full h-full">
+                  <BarChart data={chartData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                    <XAxis dataKey="day" tickLine={false} axisLine={false} tickMargin={8} />
+                    <YAxis tickLine={false} axisLine={false} tickMargin={8} width={80} />
+                    <ChartTooltip
+                      cursor={false}
+                      content={<ChartTooltipContent indicator="dot" />}
+                    />
+                    <Bar dataKey="steps" fill="var(--color-steps)" radius={4} />
+                  </BarChart>
+                </ChartContainer>
+              </div>
+            </TabsContent>
+          </Tabs>
+        )}
       </CardContent>
     </Card>
   );

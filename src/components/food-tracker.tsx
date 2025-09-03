@@ -2,11 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Barcode, PlusCircle, Search, UtensilsCrossed } from 'lucide-react';
+import { Badge } from './ui/badge';
 
-const sampleFoods = [
-  { name: 'تفاحة', calories: 95, portion: '1 متوسطة' },
-  { name: 'صدر دجاج مشوي', calories: 165, portion: '100 جرام' },
-  { name: 'أرز بني', calories: 215, portion: '1 كوب، مطبوخ' },
+const sampleFoods: { name: string, calories: number, portion: string }[] = [
+  // البيانات النموذجية تم إزالتها
 ];
 
 export function FoodTracker() {
@@ -30,22 +29,30 @@ export function FoodTracker() {
 
         <div className="space-y-4">
           <h4 className="font-semibold text-muted-foreground">سجل اليوم</h4>
-          {sampleFoods.map((food, index) => (
-            <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
-              <div className="flex items-center gap-4">
-                <div className="p-2 bg-background rounded-full border">
-                    <UtensilsCrossed className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="font-semibold">{food.name}</p>
-                  <p className="text-sm text-muted-foreground">{food.portion}</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold">{food.calories} سعر حراري</p>
-              </div>
+          {sampleFoods.length === 0 ? (
+            <div className="text-center text-muted-foreground py-8">
+              <UtensilsCrossed className="mx-auto h-12 w-12 text-gray-400" />
+              <p className="mt-4 text-sm">لم تقم بتسجيل أي طعام اليوم.</p>
+              <p className="text-xs">ابدأ بالبحث عن طعام أو مسح باركود.</p>
             </div>
-          ))}
+          ) : (
+            sampleFoods.map((food, index) => (
+              <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
+                <div className="flex items-center gap-4">
+                  <div className="p-2 bg-background rounded-full border">
+                      <UtensilsCrossed className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">{food.name}</p>
+                    <p className="text-sm text-muted-foreground">{food.portion}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold">{food.calories} سعر حراري</p>
+                </div>
+              </div>
+            ))
+          )}
 
           <Button variant="ghost" className="w-full text-primary hover:text-primary">
             <PlusCircle className="ml-2 h-5 w-5" />
