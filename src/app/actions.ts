@@ -2,7 +2,7 @@
 
 import { generatePersonalizedRecipe, PersonalizedRecipeInput } from '@/ai/flows/personalized-recipe-generation';
 import { estimateWorkoutCalories, WorkoutCalorieEstimationInput, ExerciseDetail } from '@/ai/flows/workout-calorie-estimation';
-import { generateWorkoutPlan, GenerateWorkoutPlanInput } from '@/ai/flows/generate-workout-plan';
+import { generateWorkoutPlanFlow, GenerateWorkoutPlanOutput, GenerateWorkoutPlanInputSchema as AIInputSchema } from '@/ai/flows/generate-workout-plan';
 import { z } from 'zod';
 
 const recipeSchema = z.object({
@@ -158,15 +158,18 @@ export async function getWorkoutCaloriesAction(prevState: WorkoutState, formData
 }
 
 // Action for AI workout plan generation
+export const GenerateWorkoutPlanInputSchema = AIInputSchema;
+export type GenerateWorkoutPlanInput = z.infer<typeof GenerateWorkoutPlanInputSchema>;
+
 export type AIPlanState = {
-    data: Awaited<ReturnType<typeof generateWorkoutPlan>> | null;
+    data: GenerateWorkoutPlanOutput | null;
     error: string | null;
     message: string | null;
 };
 
 export async function generateAIPlanAction(input: GenerateWorkoutPlanInput): Promise<AIPlanState> {
     try {
-        const plan = await generateWorkoutPlan(input);
+        const plan = await generateWorkoutPlanFlow(input);
         return {
             data: plan,
             error: null,

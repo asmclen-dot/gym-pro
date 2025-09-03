@@ -12,7 +12,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { getWorkoutCaloriesAction, WorkoutState, generateAIPlanAction, AIPlanState } from '@/app/actions';
+import { getWorkoutCaloriesAction, WorkoutState, generateAIPlanAction, AIPlanState, GenerateWorkoutPlanInput } from '@/app/actions';
 import { format } from 'date-fns';
 
 
@@ -451,7 +451,7 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
     const getNumericValue = (value: string | number | undefined | null): number | undefined => {
         if (value === undefined || value === null || value === '') return undefined;
         const num = Number(value);
-        return isNaN(num) ? undefined : num;
+        return isNaN(num) || num <= 0 ? undefined : num;
     };
 
     const handleCalculate = async (dayNumber: number) => {
@@ -479,9 +479,13 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
                 if (reps) exerciseData.reps = reps;
                 if (weight) exerciseData.weight = weight;
     
-                return exerciseData;
+                // Only include if it has some metric to calculate
+                if (Object.keys(exerciseData).length > 2) {
+                    return exerciseData;
+                }
+                return null;
             })
-            .filter(Boolean); // Filter out any undefined/null entries if a map were to return them
+            .filter(Boolean);
         
         const formData = new FormData();
         formData.append('type', 'full_day');

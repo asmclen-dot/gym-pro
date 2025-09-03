@@ -2,9 +2,7 @@
 /**
  * @fileOverview A workout plan generation AI agent.
  *
- * - generateWorkoutPlan - A function that handles the workout plan generation process.
- * - GenerateWorkoutPlanInput - The input type for the generateWorkoutPlan function.
- * - GenerateWorkoutPlanOutput - The return type for the generateWorkoutPlan function.
+ * - generateWorkoutPlanFlow - A function that handles the workout plan generation process.
  */
 
 import {ai} from '@/ai/genkit';
@@ -27,7 +25,6 @@ const WorkoutDaySchema = z.object({
     exercises: z.array(ExerciseSchema).describe("A list of exercises for this specific day."),
 });
 
-
 export const GenerateWorkoutPlanInputSchema = z.object({
   daysPerWeek: z.number().min(1).max(7).describe("The number of days the user wants to work out per week."),
   workoutType: z.enum(['strength', 'cardio', 'mixed']).describe("The primary focus of the workout plan."),
@@ -38,11 +35,6 @@ export const GenerateWorkoutPlanOutputSchema = z.object({
     plan: z.array(WorkoutDaySchema).describe("The generated workout plan, with one entry per workout day."),
 });
 export type GenerateWorkoutPlanOutput = z.infer<typeof GenerateWorkoutPlanOutputSchema>;
-
-
-export async function generateWorkoutPlan(input: GenerateWorkoutPlanInput): Promise<GenerateWorkoutPlanOutput> {
-  return generateWorkoutPlanFlow(input);
-}
 
 
 const prompt = ai.definePrompt({
@@ -67,7 +59,7 @@ Instructions:
 `,
 });
 
-const generateWorkoutPlanFlow = ai.defineFlow(
+export const generateWorkoutPlanFlow = ai.defineFlow(
   {
     name: 'generateWorkoutPlanFlow',
     inputSchema: GenerateWorkoutPlanInputSchema,
