@@ -1,6 +1,7 @@
 'use server';
 
 import { generatePersonalizedRecipe, PersonalizedRecipeInput } from '@/ai/flows/personalized-recipe-generation';
+import { estimateWorkoutCalories, WorkoutCalorieEstimationInput } from '@/ai/flows/workout-calorie-estimation';
 import { z } from 'zod';
 
 const recipeSchema = z.object({
@@ -41,6 +42,57 @@ export async function getRecipeAction(prevState: RecipeState, formData: FormData
       data: null,
       error: `فشل إنشاء الوصفة: ${errorMessage}`,
       message: 'فشل إنشاء الذكاء الاصطناعي.',
+    };
+  }
+}
+
+const workoutSchema = z.object({
+    exerciseName: z.string().min(3, { message: 'يرجى إدخال اسم تمرين صالح.' }),
+    durationInMinutes: z.coerce.number().min(1, { message: 'يجب أن تكون المدة دقيقة واحدة على الأقل.' }),
+});
+
+export type WorkoutState = {
+  data: Awaited<ReturnType<typeof estimateWorkoutCalories>> | null;
+  error: string | null;
+  message: string | null;
+  input?: {
+    exerciseName: string,
+    durationInMinutes: number
+  }
+};
+
+
+export async function getWorkoutCaloriesAction(prevState: WorkoutState, formData: FormData): Promise<WorkoutState> {
+  const validatedFields = workoutSchema.safeParse({
+    exerciseName: formData.get('exerciseName'),
+    durationInMinutes: formData.get('durationInMinutes'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      data: null,
+      error: 'إدخال غير صالح. يرجى التحقق من الحقول.',
+      message: 'فشل التحقق من الصحة.',
+    };
+  }
+  
+  const input = validatedFields.data;
+
+  try {
+    const workoutCalories = await estimateWorkoutCalories(input as WorkoutCalorieEstimationInput);
+    return {
+      data: workoutCalories,
+      error: null,
+      message: 'تم حساب السعرات الحرارية بنجاح!',
+      input,
+    };
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : 'حدث خطأ غير معروف.';
+    return {
+      data: null,
+      error: `فشل حساب السعرات الحرارية: ${errorMessage}`,
+      message: 'فشل إنشاء الذكاء الاصطناعي.',
+      input
     };
   }
 }

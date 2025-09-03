@@ -6,6 +6,7 @@ import { HabitTracker } from '@/components/habit-tracker';
 import { RecipeGenerator } from '@/components/recipe-generator';
 import { Achievements } from '@/components/achievements';
 import { UserProfile } from '@/components/user-profile';
+import { AIWorkoutPlanner } from '@/components/ai-workout-planner';
 
 export default function Home() {
   return (
@@ -20,6 +21,7 @@ export default function Home() {
 
             <div className="lg:col-span-2 space-y-6 lg:space-y-8">
               <FoodTracker />
+              <AIWorkoutPlanner />
               <ActivityTracker />
             </div>
 
