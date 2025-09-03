@@ -1,20 +1,21 @@
 
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dumbbell, Heart, Combine, PlusCircle, Trash2, CheckSquare, Edit, BrainCircuit, Droplets, Clock, Weight, Repeat, Flame, Loader2 } from 'lucide-react';
+import { Dumbbell, Heart, Combine, PlusCircle, Trash2, CheckSquare, Edit, BrainCircuit, Droplets, Clock, Weight, Repeat, Flame, Loader2, RefreshCw } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { getWorkoutCaloriesAction, WorkoutState, generateAIPlanAction, AIPlanState } from '@/app/actions';
-import { GenerateWorkoutPlanInput, GenerateWorkoutPlanOutput } from '@/app/types';
+import { GenerateWorkoutPlanInput, GenerateWorkoutPlanOutput, AIWorkoutDay, AIExercise } from '@/app/types';
 import { format } from 'date-fns';
+import { Skeleton } from './ui/skeleton';
 
 
 const exerciseList = [
@@ -51,28 +52,17 @@ interface CourseConfig {
   workoutType: 'strength' | 'cardio' | 'mixed' | '';
 }
 
-interface Exercise {
-    id: string;
-    name: string;
-    type: 'strength' | 'cardio' | 'flexibility';
-    // Planned values
-    targetSets?: number;
-    targetReps?: number;
-    targetDuration?: number; // in minutes
-    targetWeight?: number; // in kg
-    // Actual logged values
+interface Exercise extends AIExercise {
     actualSets?: number | string;
     actualReps?: number | string;
     actualDuration?: number | string;
     actualWeight?: number | string;
-    done?: boolean;
 }
 
-interface WorkoutDay {
-    day: number;
-    targetTime: 'morning' | 'afternoon' | 'evening' | '';
+interface WorkoutDay extends AIWorkoutDay {
     exercises: Exercise[];
 }
+
 
 function CourseRegistration({ onCourseCreate }: { onCourseCreate: (config: CourseConfig) => void }) {
   const [days, setDays] = useState('');
@@ -145,7 +135,7 @@ function CourseRegistration({ onCourseCreate }: { onCourseCreate: (config: Cours
   );
 }
 
-function WorkoutPlanSetup({ config, existingPlan, onSave }: { config: CourseConfig, existingPlan?: WorkoutDay[] | null, onSave: (plan: WorkoutDay[]) => void }) {
+function WorkoutPlanSetup({ config, existingPlan, onSave, onCancel }: { config: CourseConfig, existingPlan?: WorkoutDay[] | null, onSave: (plan: WorkoutDay[]) => void, onCancel: () => void }) {
     const [workoutDays, setWorkoutDays] = useState<WorkoutDay[]>(
         existingPlan || Array.from({ length: config.daysPerWeek }, (_, i) => ({
             day: i + 1,
@@ -168,7 +158,7 @@ function WorkoutPlanSetup({ config, existingPlan, onSave }: { config: CourseConf
             workoutType: config.workoutType as 'strength' | 'cardio' | 'mixed'
         });
         if (result.data?.plan) {
-            setWorkoutDays(result.data.plan);
+            setWorkoutDays(result.data.plan.map(day => ({...day, exercises: day.exercises.map(ex => ({...ex, done: false})) })));
         } else {
             // Handle error, maybe show a toast
             console.error(result.error);
@@ -201,6 +191,7 @@ function WorkoutPlanSetup({ config, existingPlan, onSave }: { config: CourseConf
             targetReps: newExercise.type === 'strength' ? Number(newExercise.targetReps || 12) : undefined,
             targetDuration: newExercise.type === 'cardio' || newExercise.type === 'flexibility' ? Number(newExercise.targetDuration || 15) : undefined,
             targetWeight: newExercise.type === 'strength' ? Number(newExercise.targetWeight || 10) : undefined,
+            done: false,
         };
 
         setWorkoutDays(currentDays =>
@@ -325,11 +316,16 @@ function WorkoutPlanSetup({ config, existingPlan, onSave }: { config: CourseConf
                         ))}
                     </Accordion>
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="flex-col sm:flex-row gap-2">
                     <Button size="lg" className="w-full text-lg" onClick={() => onSave(workoutDays)} disabled={isPlanEmpty || isGenerating}>
                         <CheckSquare className='ml-2 h-5 w-5'/>
                         حفظ الكورس
                     </Button>
+                     {existingPlan && (
+                        <Button size="lg" variant="secondary" className="w-full sm:w-auto" onClick={onCancel}>
+                            إلغاء
+                        </Button>
+                     )}
                 </CardFooter>
             </Card>
 
@@ -428,25 +424,30 @@ function WorkoutPlanSetup({ config, existingPlan, onSave }: { config: CourseConf
     )
 }
 
-function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[], onEdit: () => void }) {
+function WorkoutPlanDisplay({ plan: initialPlan, onEdit, onReset }: { plan: WorkoutDay[], onEdit: () => void, onReset: () => void }) {
     const [plan, setPlan] = useState<WorkoutDay[]>(initialPlan);
     const [dailyCalories, setDailyCalories] = useState<Record<number, number | null>>({});
     const [loadingDay, setLoadingDay] = useState<number | null>(null);
 
+    useEffect(() => {
+        // When initial plan changes (e.g. from parent), update the state
+        setPlan(initialPlan);
+    }, [initialPlan]);
+
     const handlePerformanceChange = (dayNumber: number, exerciseId: string, field: keyof Exercise, value: string | number | boolean) => {
-        setPlan(currentPlan =>
-            currentPlan.map(day => {
-                if (day.day === dayNumber) {
-                    return {
-                        ...day,
-                        exercises: day.exercises.map(ex =>
-                            ex.id === exerciseId ? { ...ex, [field]: value } : ex
-                        )
-                    };
-                }
-                return day;
-            })
-        );
+        const updatedPlan = plan.map(day => {
+            if (day.day === dayNumber) {
+                return {
+                    ...day,
+                    exercises: day.exercises.map(ex =>
+                        ex.id === exerciseId ? { ...ex, [field]: value } : ex
+                    )
+                };
+            }
+            return day;
+        });
+        setPlan(updatedPlan);
+        localStorage.setItem('workoutPlan', JSON.stringify(updatedPlan));
     };
     
     const getNumericValue = (value: string | number | undefined | null): number | undefined => {
@@ -469,10 +470,10 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
                 type: e.type,
             };
 
-            const duration = getNumericValue(e.actualDuration) ?? e.targetDuration;
-            const sets = getNumericValue(e.actualSets) ?? e.targetSets;
-            const reps = getNumericValue(e.actualReps) ?? e.targetReps;
-            const weight = getNumericValue(e.actualWeight) ?? e.targetWeight;
+            const duration = getNumericValue(e.actualDuration) ?? getNumericValue(e.targetDuration);
+            const sets = getNumericValue(e.actualSets) ?? getNumericValue(e.targetSets);
+            const reps = getNumericValue(e.actualReps) ?? getNumericValue(e.targetReps);
+            const weight = getNumericValue(e.actualWeight) ?? getNumericValue(e.targetWeight);
 
             if (e.type !== 'strength') {
                 if (duration) exerciseData.durationInMinutes = duration;
@@ -482,7 +483,6 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
                 if (weight) exerciseData.weight = weight;
             }
             
-            // Ensure there's at least one metric to calculate with
             if (Object.keys(exerciseData).length > 2) {
                 return exerciseData;
             }
@@ -505,12 +505,10 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
             const calculatedCalories = result.data.estimatedCalories;
             setDailyCalories(prev => ({ ...prev, [dayNumber]: calculatedCalories }));
 
-            // Save to localStorage
             const today = format(new Date(), 'yyyy-MM-dd');
             try {
                 const dayStorage = JSON.parse(localStorage.getItem(today) || '{}');
                 const existingCalories = dayStorage.calories || 0;
-                // Add the newly calculated calories to the existing total for the day
                 const updatedCalories = existingCalories + calculatedCalories;
                 dayStorage.calories = updatedCalories;
                 localStorage.setItem(today, JSON.stringify(dayStorage));
@@ -531,10 +529,16 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
                     <CardTitle className="font-headline text-2xl tracking-tight">كورس التمرين الحالي</CardTitle>
                     <CardDescription>هذه هي خطتك التدريبية المحفوظة. بالتوفيق!</CardDescription>
                 </div>
-                <Button variant="outline" size="icon" onClick={onEdit}>
-                    <Edit className='h-5 w-5' />
-                    <span className='sr-only'>تعديل الكورس</span>
-                </Button>
+                 <div className="flex gap-2">
+                    <Button variant="outline" size="icon" onClick={onEdit}>
+                        <Edit className='h-5 w-5' />
+                        <span className='sr-only'>تعديل الكورس</span>
+                    </Button>
+                     <Button variant="destructive" size="icon" onClick={onReset}>
+                        <RefreshCw className='h-5 w-5' />
+                        <span className='sr-only'>إعادة تعيين الكورس</span>
+                    </Button>
+                </div>
             </CardHeader>
             <CardContent>
                 <Accordion type="multiple" defaultValue={['day-1']} className="w-full">
@@ -578,7 +582,7 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
                                                     </div>
                                                      <div className="flex items-center gap-2">
                                                         <Label htmlFor={`ex-done-${ex.id}`} className='cursor-pointer text-sm font-semibold'>تم</Label>
-                                                        <Input type='checkbox' id={`ex-done-${ex.id}`} className='h-5 w-5 accent-primary' 
+                                                        <input type='checkbox' id={`ex-done-${ex.id}`} className='h-5 w-5 accent-primary' 
                                                           checked={!!ex.done}
                                                           onChange={(e) => handlePerformanceChange(day, ex.id, 'done', e.target.checked)}
                                                         />
@@ -634,12 +638,50 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
     );
 }
 
+function LoadingSkeleton() {
+    return (
+        <Card className="shadow-lg">
+            <CardHeader>
+                <Skeleton className="h-8 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+            </CardContent>
+            <CardFooter>
+                 <Skeleton className="h-12 w-full" />
+            </CardFooter>
+        </Card>
+    )
+}
+
 export function WorkoutCourse() {
     const [courseConfig, setCourseConfig] = useState<CourseConfig | null>(null);
     const [savedPlan, setSavedPlan] = useState<WorkoutDay[] | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
+
+    useEffect(() => {
+        try {
+            const storedPlan = localStorage.getItem('workoutPlan');
+            if (storedPlan) {
+                setSavedPlan(JSON.parse(storedPlan));
+            }
+        } catch (error) {
+            console.error("Failed to parse workout plan from localStorage", error);
+            localStorage.removeItem('workoutPlan');
+        }
+        setIsLoading(false);
+    }, []);
+    
     const handleSavePlan = (plan: WorkoutDay[]) => {
-        setSavedPlan(plan);
+        const planWithDoneStatus = plan.map(day => ({
+            ...day,
+            exercises: day.exercises.map(ex => ({ ...ex, done: false, actualSets: '', actualReps: '', actualDuration: '', actualWeight: '' }))
+        }));
+        localStorage.setItem('workoutPlan', JSON.stringify(planWithDoneStatus));
+        setSavedPlan(planWithDoneStatus);
         setCourseConfig(null);
     };
     
@@ -655,21 +697,30 @@ export function WorkoutCourse() {
                 daysPerWeek: savedPlan.length,
                 workoutType: workoutType,
             });
-            // Don't reset the plan, pass it to the setup component for editing
-            // setSavedPlan(null); 
         }
     };
     
+    const handleResetPlan = () => {
+        localStorage.removeItem('workoutPlan');
+        setSavedPlan(null);
+        setCourseConfig(null);
+    };
+
+    const handleCancelEdit = () => {
+        setCourseConfig(null);
+    }
+    
+    if (isLoading) {
+        return <LoadingSkeleton />;
+    }
 
     if (savedPlan && !courseConfig) {
-        return <WorkoutPlanDisplay plan={savedPlan} onEdit={handleEditPlan} />;
+        return <WorkoutPlanDisplay plan={savedPlan} onEdit={handleEditPlan} onReset={handleResetPlan} />;
     }
 
     if (courseConfig) {
-        return <WorkoutPlanSetup config={courseConfig} existingPlan={savedPlan} onSave={handleSavePlan} />;
+        return <WorkoutPlanSetup config={courseConfig} existingPlan={savedPlan} onSave={handleSavePlan} onCancel={handleCancelEdit} />;
     }
 
     return <CourseRegistration onCourseCreate={setCourseConfig} />;
 }
-
-    
