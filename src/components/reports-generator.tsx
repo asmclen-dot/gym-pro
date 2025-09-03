@@ -29,7 +29,7 @@ const initialState: ReportState = {
 
 export function ReportsGenerator({ className }: React.HTMLAttributes<"div">) {
   const [date, setDate] = React.useState<DateRange | undefined>({
-    from: subDays(new Date(), 29),
+    from: subDays(new Date(), 6),
     to: new Date(),
   })
   const [state, setState] = React.useState(initialState);
