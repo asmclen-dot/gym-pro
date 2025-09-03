@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dumbbell, Heart, Combine, PlusCircle, Trash2, CheckSquare, Edit } from 'lucide-react';
+import { Dumbbell, Heart, Combine, PlusCircle, Trash2, CheckSquare, Edit, BrainCircuit, Droplets, Clock, Weight, Repeat } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
@@ -14,23 +14,23 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 
 const exerciseList = [
     // Chest
-    "ضغط البنش (Bench Press)", "ضغط البنش المائل (Incline Bench Press)", "ضغط البنش المنحدر (Decline Bench Press)", "ضغط البنش بالدمبل (Dumbbell Bench Press)", "ضغط البنش المائل بالدمبل (Incline Dumbbell Press)", "تفتيح بالدمبل (Dumbbell Flyes)", "تفتيح مائل بالدمبل (Incline Dumbbell Flyes)", "تفتيح بالكابل (Cable Crossover)", "غطس للصدر (Chest Dips)", "ضغط على الأرض (Push-up)", "ضغط على الأرض بقبضة واسعة (Wide-grip Push-up)", "ضغط على الأرض بقبضة ضيقة (Narrow-grip Push-up)", "آلة تفتيح الصدر (Pec-Deck Machine)", "آلة ضغط الصدر (Chest Press Machine)",
+    "ضغط البنش (Bench Press)", "ضغط البنش المائل (Incline Bench Press)", "ضغط البنش المنحدر (Decline Bench Press)", "ضغط البنش بالدمبل (Dumbbell Bench Press)", "ضغط البنش المائل بالدمبل (Incline Dumbbell Press)", "تفتيح بالدمبل (Dumbbell Flyes)", "تفتيح مائل بالدمبل (Incline Dumbbell Flyes)", "تفتيح بالكابل (Cable Crossover)", "غطس للصدر (Chest Dips)", "ضغط على الأرض (Push-up)", "ضغط على الأرض بقبضة واسعة (Wide-grip Push-up)", "ضغط على الأرض بقبضة ضيقة (Narrow-grip Push-up)", "آلة تفتيح الصدر (Pec-Deck Machine)", "آلة ضغط الصدر (Chest Press Machine)", "ضغط بالبار على آلة سميث (Smith Machine Bench Press)", "ضغط جيلوتين (Guillotine Press)",
     // Back
-    "الرفعة الميتة (Deadlift)", "سحب علوي (Pull-up)", "سحب علوي بقبضة واسعة (Wide-grip Pull-up)", "شين أب (Chin-up)", "تجديف بالبار (Barbell Row)", "تجديف بالبار بقبضة معكوسة (Pendlay Row)", "تجديف بالدمبل بذراع واحدة (One-Arm Dumbbell Row)", "سحب أرضي (Seated Cable Row)", "سحب أمامي (Lat Pulldown)", "سحب خلفي (Behind-the-neck Lat Pulldown)", "تمرين التي-بار (T-Bar Row)", "تمرين السوبرمان (Superman)", "تمرين الجسر (Glute Bridge)", "هايبر اكستنشن (Back Extension)",
+    "الرفعة الميتة (Deadlift)", "سحب علوي (Pull-up)", "سحب علوي بقبضة واسعة (Wide-grip Pull-up)", "شين أب (Chin-up)", "تجديف بالبار (Barbell Row)", "تجديف بالبار بقبضة معكوسة (Pendlay Row)", "تجديف بالدمبل بذراع واحدة (One-Arm Dumbbell Row)", "سحب أرضي (Seated Cable Row)", "سحب أمامي (Lat Pulldown)", "سحب خلفي (Behind-the-neck Lat Pulldown)", "تمرين التي-بار (T-Bar Row)", "تمرين السوبرمان (Superman)", "تمرين الجسر (Glute Bridge)", "هايبر اكستنشن (Back Extension)", "تجديف مقلوب (Inverted Row)", "سحب أمامي بقبضة ضيقة (Close-grip Lat Pulldown)",
     // Legs
-    "سكوات (Squat)", "سكوات أمامي (Front Squat)", "سكوات بلغاري (Bulgarian Split Squat)", "ضغط الأرجل (Leg Press)", "اندفاع (Lunge)", "اندفاع جانبي (Side Lunge)", "رفعة رومانية مميتة (Romanian Deadlift)", "رفعة مميتة بساق واحدة (Single Leg Deadlift)", "تجعيد أوتار الركبة (Hamstring Curl)", "تمديد الساق (Leg Extension)", "رفع السمانة (Calf Raise)", "آلة خطف الفخذ (Hip Abduction Machine)", "آلة ضم الفخذ (Hip Adduction Machine)", "سكوات هاك (Hack Squat)",
+    "سكوات (Squat)", "سكوات أمامي (Front Squat)", "سكوات بلغاري (Bulgarian Split Squat)", "ضغط الأرجل (Leg Press)", "اندفاع (Lunge)", "اندفاع جانبي (Side Lunge)", "رفعة رومانية مميتة (Romanian Deadlift)", "رفعة مميتة بساق واحدة (Single Leg Deadlift)", "تجعيد أوتار الركبة (Hamstring Curl)", "تمديد الساق (Leg Extension)", "رفع السمانة (Calf Raise)", "آلة خطف الفخذ (Hip Abduction Machine)", "آلة ضم الفخذ (Hip Adduction Machine)", "سكوات هاك (Hack Squat)", "سكوات القرفصاء (Goblet Squat)", "خطوات الصندوق (Box Step-ups)",
     // Shoulders
-    "ضغط الأكتاف (Overhead Press)", "ضغط الأكتاف بالدمبل (Dumbbell Shoulder Press)", "ضغط أرنولد (Arnold Press)", "رفع جانبي (Lateral Raise)", "رفع أمامي (Front Raise)", "رفع جانبي بالكابل (Cable Lateral Raise)", "تجديف عمودي (Upright Row)", "شراغز بالبار (Barbell Shrugs)", "شراغز بالدمبل (Dumbbell Shrugs)", "فيس بول (Face Pull)", "رفرفة عكسية (Reverse Pec-Deck)",
+    "ضغط الأكتاف (Overhead Press)", "ضغط الأكتاكف بالدمبل (Dumbbell Shoulder Press)", "ضغط أرنولد (Arnold Press)", "رفع جانبي (Lateral Raise)", "رفع أمامي (Front Raise)", "رفع جانبي بالكابل (Cable Lateral Raise)", "تجديف عمودي (Upright Row)", "شراغز بالبار (Barbell Shrugs)", "شراغز بالدمبل (Dumbbell Shrugs)", "فيس بول (Face Pull)", "رفرفة عكسية (Reverse Pec-Deck)", "رفرفة عكسية بالدمبل (Bent-over Dumbbell Reverse Fly)", "بايك بوش أب (Pike Push-up)",
     // Biceps
-    "تجعيد العضلة ذات الرأسين بالبار (Barbell Bicep Curl)", "تجعيد العضلة ذات الرأسين بالدمبل (Dumbbell Bicep Curl)", "تجعيد هامر (Hammer Curl)", "تجعيد بريتشر (Preacher Curl)", "تجعيد التركيز (Concentration Curl)", "تجعيد بالكابل (Cable Curl)", "شين أب بقبضة ضيقة (Close-grip Chin-up)",
+    "تجعيد العضلة ذات الرأسين بالبار (Barbell Bicep Curl)", "تجعيد العضلة ذات الرأسين بالدمبل (Dumbbell Bicep Curl)", "تجعيد هامر (Hammer Curl)", "تجعيد بريتشر (Preacher Curl)", "تجعيد التركيز (Concentration Curl)", "تجعيد بالكابل (Cable Curl)", "شين أب بقبضة ضيقة (Close-grip Chin-up)", "تجعيد Zottman", "تجعيد العنكبوت (Spider Curl)",
     // Triceps
-    "ترايسبس بوشดาวน์ (Tricep Pushdown)", "ترايسبس اكستنشن بالدمبل (Dumbbell Tricep Extension)", "ترايسبس اكستنشن بالكابل (Cable Tricep Extension)", "ضغط البنش بقبضة ضيقة (Close-Grip Bench Press)", "غطس للترايسبس (Tricep Dips)", "تمرين الكيك باك (Tricep Kickback)", "سكال كراشر (Skull Crusher)",
+    "ترايسبس بوشดาวน์ (Tricep Pushdown)", "ترايسبس اكستنشن بالدمبل (Dumbbell Tricep Extension)", "ترايسبس اكستنشن بالكابل (Cable Tricep Extension)", "ضغط البنش بقبضة ضيقة (Close-Grip Bench Press)", "غطس للترايسبس (Tricep Dips)", "تمرين الكيك باك (Tricep Kickback)", "سكال كراشر (Skull Crusher)", "ترايسبس اكستنشن فوق الرأس (Overhead Tricep Extension)",
     // Core
-    "تمرين المعدة (Crunch)", "رفع الساق (Leg Raise)", "بلانك (Plank)", "بلانك جانبي (Side Plank)", "تمرين الدراجة الهوائية (Bicycle Crunch)", "تمرين متسلق الجبال (Mountain Climbers)", "تمرين لمس أصابع القدم (Toe Touches)", "تمرين قاطع الخشب (Woodchoppers)", "تمرين العلم الروسي (Russian Twist)", "تمرين الـ V-up", "تمرين الـ Ab Rollout",
+    "تمرين المعدة (Crunch)", "رفع الساق (Leg Raise)", "بلانك (Plank)", "بلانك جانبي (Side Plank)", "تمرين الدراجة الهوائية (Bicycle Crunch)", "تمرين متسلق الجبال (Mountain Climbers)", "تمرين لمس أصابع القدم (Toe Touches)", "تمرين قاطع الخشب (Woodchoppers)", "تمرين العلم الروسي (Russian Twist)", "تمرين الـ V-up", "تمرين الـ Ab Rollout", "رفع الركبة المعلق (Hanging Knee Raise)", "البلانك المفرغ (Hollow Body Hold)",
     // Cardio
-    "جري (Running)", "هرولة (Jogging)", "مشي سريع (Brisk Walking)", "ركوب الدراجة (Cycling)", "ركوب الدراجة الثابتة (Stationary Bike)", "سباحة (Swimming)", "جهاز الإليبتيكال (Elliptical Trainer)", "نط الحبل (Jumping Rope)", "صعود السلالم (Stair Climbing)", "آلة التجديف (Rowing Machine)", "تمارين عالية الكثافة (HIIT)", "بيربيز (Burpees)", "قفز الرافعات (Jumping Jacks)", "صندوق القفز (Box Jumps)", "ضرب الحبال (Battle Ropes)",
+    "جري (Running)", "هرولة (Jogging)", "مشي سريع (Brisk Walking)", "ركوب الدراجة (Cycling)", "ركوب الدراجة الثابتة (Stationary Bike)", "سباحة (Swimming)", "جهاز الإليبتيكال (Elliptical Trainer)", "نط الحبل (Jumping Rope)", "صعود السلالم (Stair Climbing)", "آلة التجديف (Rowing Machine)", "تمارين عالية الكثافة (HIIT)", "بيربيز (Burpees)", "قفز الرافعات (Jumping Jacks)", "صندوق القفز (Box Jumps)", "ضرب الحبال (Battle Ropes)", "كيتل بيل سوينغ (Kettlebell Swings)",
     // Stretching & Flexibility
-    "تمدد أوتار الركبة (Hamstring Stretch)", "تمدد عضلات الفخذ الرباعية (Quad Stretch)", "تمدد الصدر (Chest Stretch)", "تمدد الكتف (Shoulder Stretch)", "تمدد الظهر (Cat-Cow Stretch)", "تمدد عضلة الحمامة (Pigeon Pose)", "تمدد الكوبرا (Cobra Pose)", "وضعية الطفل (Child's Pose)", "يوجا (Yoga)", "بيلاتس (Pilates)"
+    "تمدد أوتار الركبة (Hamstring Stretch)", "تمدد عضلات الفخذ الرباعية (Quad Stretch)", "تمدد الصدر (Chest Stretch)", "تمدد الكتف (Shoulder Stretch)", "تمدد الظهر (Cat-Cow Stretch)", "تمدد عضلة الحمامة (Pigeon Pose)", "تمدد الكوبرا (Cobra Pose)", "وضعية الطفل (Child's Pose)", "يوجا (Yoga)", "بيلاتس (Pilates)", "تمدد الفراشة (Butterfly Stretch)", "تمدد الترايسبس (Triceps Stretch)", "لمس أصابع القدمين وقوفاً (Standing Toe Touch)"
 ];
 
 interface CourseConfig {
@@ -40,14 +40,16 @@ interface CourseConfig {
 
 interface Exercise {
     name: string;
-    type: 'strength' | 'cardio';
+    type: 'strength' | 'cardio' | 'flexibility';
     sets?: number;
     reps?: number;
     duration?: number; // in minutes
+    weight?: number; // in kg
 }
 
 interface WorkoutDay {
     day: number;
+    targetTime: 'morning' | 'afternoon' | 'evening' | '';
     exercises: Exercise[];
 }
 
@@ -126,6 +128,7 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
     const [workoutDays, setWorkoutDays] = useState<WorkoutDay[]>(
         Array.from({ length: config.daysPerWeek }, (_, i) => ({
             day: i + 1,
+            targetTime: '',
             exercises: [],
         }))
     );
@@ -155,9 +158,10 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
         const finalExercise: Exercise = {
             name: newExercise.name,
             type: newExercise.type,
-            sets: newExercise.type === 'strength' ? Number(newExercise.sets || 0) : undefined,
-            reps: newExercise.type === 'strength' ? Number(newExercise.reps || 0) : undefined,
-            duration: newExercise.type === 'cardio' ? Number(newExercise.duration || 0) : undefined,
+            sets: newExercise.type === 'strength' ? Number(newExercise.sets || 3) : undefined,
+            reps: newExercise.type === 'strength' ? Number(newExercise.reps || 12) : undefined,
+            duration: newExercise.type === 'cardio' || newExercise.type === 'flexibility' ? Number(newExercise.duration || 15) : undefined,
+            weight: newExercise.type === 'strength' ? Number(newExercise.weight || 10) : undefined,
         };
 
         setWorkoutDays(currentDays =>
@@ -191,6 +195,17 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
         setNewExercise({ ...newExercise, name: exerciseName });
         setIsPopoverOpen(false);
     }
+    
+    const handleTargetTimeChange = (dayNumber: number, time: WorkoutDay['targetTime']) => {
+        setWorkoutDays(currentDays =>
+            currentDays.map(day =>
+                day.day === dayNumber
+                    ? { ...day, targetTime: time }
+                    : day
+            )
+        );
+    };
+
 
     const isPlanEmpty = workoutDays.every(day => day.exercises.length === 0);
 
@@ -206,7 +221,19 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
                         {workoutDays.map(({ day, exercises }) => (
                             <AccordionItem value={`day-${day}`} key={day}>
                                 <AccordionTrigger className="text-lg font-semibold">
-                                    يوم التمرين {day}
+                                    <div className='flex items-center justify-between w-full pr-2'>
+                                        <span>يوم التمرين {day}</span>
+                                        <Select onValueChange={(value) => handleTargetTimeChange(day, value as WorkoutDay['targetTime'])}>
+                                            <SelectTrigger className="w-[150px] h-9 text-sm" onClick={(e) => e.stopPropagation()}>
+                                                <SelectValue placeholder="وقت التمرين" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="morning">صباحًا</SelectItem>
+                                                <SelectItem value="afternoon">ظهرًا</SelectItem>
+                                                <SelectItem value="evening">مساءً</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="space-y-4 pt-4">
                                     {exercises.length === 0 ? (
@@ -218,13 +245,19 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
                                             {exercises.map((ex, index) => (
                                                  <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 group">
                                                     <div className='flex items-center gap-3'>
-                                                        <div className={cn("p-2 rounded-full", ex.type === 'strength' ? 'bg-primary/20' : 'bg-destructive/20')}>
-                                                            {ex.type === 'strength' ? <Dumbbell className="h-5 w-5 text-primary" /> : <Heart className="h-5 w-5 text-destructive" />}
+                                                        <div className={cn("p-2 rounded-full", 
+                                                          ex.type === 'strength' ? 'bg-primary/20' : 
+                                                          ex.type === 'cardio' ? 'bg-destructive/20' : 'bg-accent/80'
+                                                        )}>
+                                                            {ex.type === 'strength' && <Dumbbell className="h-5 w-5 text-primary" />}
+                                                            {ex.type === 'cardio' && <Heart className="h-5 w-5 text-destructive" />}
+                                                            {ex.type === 'flexibility' && <Droplets className="h-5 w-5 text-accent-foreground" />}
                                                         </div>
                                                         <div>
                                                             <p className="font-bold">{ex.name}</p>
                                                             <p className="text-sm text-muted-foreground">
-                                                                {ex.type === 'strength' ? `${ex.sets} مجموعات × ${ex.reps} عدات` : `${ex.duration} دقيقة`}
+                                                                {ex.type === 'strength' && `الهدف: ${ex.sets} مجموعات × ${ex.reps} عدات @ ${ex.weight}كغ`}
+                                                                {(ex.type === 'cardio' || ex.type === 'flexibility') && `الهدف: ${ex.duration} دقيقة`}
                                                             </p>
                                                         </div>
                                                     </div>
@@ -253,11 +286,11 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
             </Card>
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="sm:max-w-[425px]">
+                <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>إضافة تمرين جديد لليوم {selectedDay}</DialogTitle>
                         <DialogDescription>
-                            ابحث عن تمرين أو أدخل اسمًا جديدًا.
+                            ابحث عن تمرين أو أدخل اسمًا جديدًا وحدد تفاصيله.
                         </DialogDescription>
                     </DialogHeader>
                      <div className="grid gap-4 py-4">
@@ -289,7 +322,7 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
                                     </div>
                                 ) : (
                                     <div className="p-2 text-center text-sm text-muted-foreground">
-                                        {searchTerm && "لم يتم العثور على تمارين. يمكنك إضافته."}
+                                        {searchTerm ? "لم يتم العثور على تمارين. يمكنك إضافته." : "ابدأ الكتابة للبحث..."}
                                     </div>
                                 )}
                             </PopoverContent>
@@ -299,7 +332,7 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
                              <Label htmlFor="exercise-type">نوع التمرين</Label>
                              <Select
                                 value={newExercise.type}
-                                onValueChange={(value: 'strength' | 'cardio') => setNewExercise({ ...newExercise, type: value })}
+                                onValueChange={(value: Exercise['type']) => setNewExercise({ ...newExercise, type: value })}
                             >
                                 <SelectTrigger id="exercise-type">
                                     <SelectValue placeholder="اختر النوع" />
@@ -307,44 +340,31 @@ function WorkoutPlanSetup({ config, onSave }: { config: CourseConfig, onSave: (p
                                 <SelectContent>
                                     <SelectItem value="strength">قوة</SelectItem>
                                     <SelectItem value="cardio">كارديو</SelectItem>
+                                    <SelectItem value="flexibility">مرونة وتمدد</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                         
                         {newExercise.type === 'strength' && (
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-3 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="weight">الوزن (كغ)</Label>
+                                    <Input id="weight" type="number" value={newExercise.weight || ''} onChange={(e) => setNewExercise({ ...newExercise, weight: parseInt(e.target.value) })} placeholder="10" />
+                                </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="sets">المجموعات</Label>
-                                    <Input
-                                        id="sets"
-                                        type="number"
-                                        value={newExercise.sets || ''}
-                                        onChange={(e) => setNewExercise({ ...newExercise, sets: parseInt(e.target.value) })}
-                                        placeholder="3"
-                                    />
+                                    <Input id="sets" type="number" value={newExercise.sets || ''} onChange={(e) => setNewExercise({ ...newExercise, sets: parseInt(e.target.value) })} placeholder="3" />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="reps">العدات</Label>
-                                    <Input
-                                        id="reps"
-                                        type="number"
-                                        value={newExercise.reps || ''}
-                                        onChange={(e) => setNewExercise({ ...newExercise, reps: parseInt(e.target.value) })}
-                                        placeholder="12"
-                                    />
+                                    <Input id="reps" type="number" value={newExercise.reps || ''} onChange={(e) => setNewExercise({ ...newExercise, reps: parseInt(e.target.value) })} placeholder="12" />
                                 </div>
                             </div>
                         )}
-                        {newExercise.type === 'cardio' && (
+                        {(newExercise.type === 'cardio' || newExercise.type === 'flexibility') && (
                              <div className="space-y-2">
                                 <Label htmlFor="duration">المدة (بالدقائق)</Label>
-                                <Input
-                                    id="duration"
-                                    type="number"
-                                    value={newExercise.duration || ''}
-                                    onChange={(e) => setNewExercise({ ...newExercise, duration: parseInt(e.target.value) })}
-                                    placeholder="30"
-                                />
+                                <Input id="duration" type="number" value={newExercise.duration || ''} onChange={(e) => setNewExercise({ ...newExercise, duration: parseInt(e.target.value) })} placeholder="30" />
                             </div>
                         )}
                     </div>
@@ -375,10 +395,13 @@ function WorkoutPlanDisplay({ plan, onEdit }: { plan: WorkoutDay[], onEdit: () =
             </CardHeader>
             <CardContent>
                 <Accordion type="multiple" defaultValue={['day-1']} className="w-full">
-                    {plan.map(({ day, exercises }) => (
+                    {plan.map(({ day, exercises, targetTime }) => (
                         <AccordionItem value={`day-${day}`} key={day}>
                             <AccordionTrigger className="text-lg font-semibold">
-                                يوم التمرين {day}
+                                 <div className='flex items-center justify-between w-full pr-2'>
+                                    <span>يوم التمرين {day}</span>
+                                    {targetTime && <span className='text-sm font-normal text-muted-foreground bg-muted px-2 py-1 rounded-md'>{targetTime === 'morning' ? 'صباحًا' : targetTime === 'afternoon' ? 'ظهرًا' : 'مساءً'}</span>}
+                                </div>
                             </AccordionTrigger>
                             <AccordionContent className="space-y-4 pt-4">
                                 {exercises.length === 0 ? (
@@ -388,21 +411,50 @@ function WorkoutPlanDisplay({ plan, onEdit }: { plan: WorkoutDay[], onEdit: () =
                                 ) : (
                                     <div className="space-y-3">
                                         {exercises.map((ex, index) => (
-                                             <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
-                                                <div className='flex items-center gap-3'>
-                                                    <div className={cn("p-2 rounded-full", ex.type === 'strength' ? 'bg-primary/20' : 'bg-destructive/20')}>
-                                                        {ex.type === 'strength' ? <Dumbbell className="h-5 w-5 text-primary" /> : <Heart className="h-5 w-5 text-destructive" />}
+                                             <div key={index} className="flex flex-col p-3 rounded-lg bg-secondary/50 gap-3">
+                                                <div className="flex items-center justify-between">
+                                                    <div className='flex items-center gap-3'>
+                                                         <div className={cn("p-2 rounded-full", 
+                                                          ex.type === 'strength' ? 'bg-primary/20' : 
+                                                          ex.type === 'cardio' ? 'bg-destructive/20' : 'bg-accent/80'
+                                                        )}>
+                                                            {ex.type === 'strength' && <Dumbbell className="h-5 w-5 text-primary" />}
+                                                            {ex.type === 'cardio' && <Heart className="h-5 w-5 text-destructive" />}
+                                                            {ex.type === 'flexibility' && <Droplets className="h-5 w-5 text-accent-foreground" />}
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-bold">{ex.name}</p>
+                                                            <p className="text-sm text-muted-foreground">
+                                                                {ex.type === 'strength' && `الهدف: ${ex.sets} مجموعات × ${ex.reps} عدات @ ${ex.weight}كغ`}
+                                                                {(ex.type === 'cardio' || ex.type === 'flexibility') && `الهدف: ${ex.duration} دقيقة`}
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <p className="font-bold">{ex.name}</p>
-                                                        <p className="text-sm text-muted-foreground">
-                                                            {ex.type === 'strength' ? `${ex.sets} مجموعات × ${ex.reps} عدات` : `${ex.duration} دقيقة`}
-                                                        </p>
+                                                     <div className="flex items-center gap-2">
+                                                        <Label htmlFor={`ex-done-${day}-${index}`} className='cursor-pointer text-sm font-semibold'>تم</Label>
+                                                        <Input type='checkbox' id={`ex-done-${day}-${index}`} className='h-5 w-5 accent-primary' />
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Label htmlFor={`ex-done-${day}-${index}`} className='cursor-pointer text-sm'>تم</Label>
-                                                    <Input type='checkbox' id={`ex-done-${day}-${index}`} className='h-5 w-5' />
+                                                {/* Daily Performance Logging */}
+                                                <div className='flex items-center gap-2 pl-12'>
+                                                    <p className='text-sm font-semibold'>الأداء الفعلي:</p>
+                                                    {ex.type === 'strength' && (
+                                                        <>
+                                                            <Weight className="h-4 w-4 text-muted-foreground" />
+                                                            <Input type='number' placeholder={`${ex.weight} كغ`} className='h-8 w-20 text-sm' />
+                                                            <Repeat className="h-4 w-4 text-muted-foreground" />
+                                                            <Input type='text' placeholder={`${ex.sets}x${ex.reps}`} className='h-8 w-20 text-sm' />
+                                                        </>
+                                                    )}
+                                                    {(ex.type === 'cardio' || ex.type === 'flexibility') && (
+                                                         <>
+                                                            <Clock className="h-4 w-4 text-muted-foreground" />
+                                                            <Input type='number' placeholder={`${ex.duration} دقيقة`} className='h-8 w-28 text-sm' />
+                                                        </>
+                                                    )}
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                        <BrainCircuit className="h-5 w-5 text-primary" />
+                                                    </Button>
                                                 </div>
                                             </div>
                                         ))}
@@ -423,11 +475,10 @@ export function WorkoutCourse() {
 
     const handleSavePlan = (plan: WorkoutDay[]) => {
         setSavedPlan(plan);
-        setCourseConfig(null); // Hide the setup view
+        setCourseConfig(null);
     };
     
     const handleEditPlan = () => {
-        // To re-enter setup, we need a config. We can derive it from the saved plan.
         if (savedPlan) {
             const hasStrength = savedPlan.some(d => d.exercises.some(e => e.type === 'strength'));
             const hasCardio = savedPlan.some(d => d.exercises.some(e => e.type === 'cardio'));
