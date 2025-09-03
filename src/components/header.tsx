@@ -1,6 +1,7 @@
-import { Leaf } from 'lucide-react';
+import { Leaf, Settings } from 'lucide-react';
 import { ThemeToggle } from './theme-toggle';
 import Link from 'next/link';
+import { Button } from './ui/button';
 
 export function Header() {
   return (
@@ -13,7 +14,13 @@ export function Header() {
           صحة كوتش
         </h1>
       </Link>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
+        <Link href="/settings">
+            <Button variant="ghost" size="icon">
+                <Settings className="h-5 w-5" />
+                <span className="sr-only">الإعدادات</span>
+            </Button>
+        </Link>
         <ThemeToggle />
       </div>
     </header>

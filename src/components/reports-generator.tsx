@@ -34,9 +34,11 @@ export function ReportsGenerator({ className }: React.HTMLAttributes<"div">) {
   })
   const [state, setState] = React.useState(initialState);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isClient, setIsClient] = React.useState(false);
   const { toast } = useToast();
   
   React.useEffect(() => {
+    setIsClient(true);
     if (state.error) {
       toast({
         variant: "destructive",
@@ -60,6 +62,20 @@ export function ReportsGenerator({ className }: React.HTMLAttributes<"div">) {
 
     const interval = eachDayOfInterval({ start: date.from, end: date.to });
     const dailyData: FitnessReportInput['dailyData'] = {};
+    let userWeight: number | undefined;
+
+    try {
+        const settingsData = localStorage.getItem('userSettings');
+        if (settingsData) {
+            const parsedSettings = JSON.parse(settingsData);
+            if (parsedSettings.weight) {
+                userWeight = Number(parsedSettings.weight);
+            }
+        }
+    } catch (error) {
+        console.error("Failed to read weight from localStorage", error);
+    }
+
 
     interval.forEach(day => {
         const dateString = format(day, 'yyyy-MM-dd');
@@ -83,12 +99,17 @@ export function ReportsGenerator({ className }: React.HTMLAttributes<"div">) {
       startDate: format(date.from, 'yyyy-MM-dd'),
       endDate: format(date.to, 'yyyy-MM-dd'),
       dailyData: dailyData,
-      // userWeightKg: 75 // Optional: Could be fetched from user profile
+      userWeightKg: userWeight
     };
 
     const result = await getReportAction(input);
     setState(result);
   };
+  
+  if (!isClient) {
+    return null; // or a loading skeleton
+  }
+
 
   const ReportIcon = ({ section }: { section: string }) => {
     switch (section) {
