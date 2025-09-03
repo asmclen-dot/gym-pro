@@ -9,7 +9,7 @@ import { UserProfile } from '@/components/user-profile';
 import { AIWorkoutPlanner } from '@/components/ai-workout-planner';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Dumbbell } from 'lucide-react';
+import { Dumbbell, FileText } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -17,11 +17,17 @@ export default function Home() {
       <Header />
       <main className="flex-1 p-4 md:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto">
-           <div className="mb-6">
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <Link href="/gym">
               <Button className="w-full h-16 text-lg">
                 <Dumbbell className="ml-4 h-6 w-6" />
                 اذهب إلى صفحة الجيم الخاصة بي
+              </Button>
+            </Link>
+             <Link href="/reports">
+              <Button className="w-full h-16 text-lg" variant="outline">
+                <FileText className="ml-4 h-6 w-6" />
+                إنشاء تقرير أداء
               </Button>
             </Link>
           </div>
