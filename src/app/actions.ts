@@ -2,7 +2,6 @@
 
 import { generatePersonalizedRecipe, PersonalizedRecipeInput } from '@/ai/flows/personalized-recipe-generation';
 import { estimateWorkoutCalories, WorkoutCalorieEstimationInput } from '@/ai/flows/workout-calorie-estimation';
-import { generateWorkoutPlan, type WorkoutPlanInput, type WorkoutPlanOutput } from '@/ai/flows/workout-plan-generation';
 import { z } from 'zod';
 
 const recipeSchema = z.object({
@@ -109,49 +108,6 @@ export async function getWorkoutCaloriesAction(prevState: WorkoutState, formData
       error: `فشل حساب السعرات الحرارية: ${errorMessage}`,
       message: 'فشل إنشاء الذكاء الاصطناعي.',
       input
-    };
-  }
-}
-
-const workoutPlanSchema = z.object({
-  days: z.coerce.number().min(1, { message: 'يجب أن يكون عدد الأيام 1 على الأقل.' }).max(7, { message: 'لا يمكن أن يتجاوز عدد الأيام 7.' }),
-  goals: z.string().min(10, { message: 'يرجى وصف أهدافك ببعض التفصيل.' }),
-});
-
-export type WorkoutPlanState = {
-  data: WorkoutPlanOutput | null;
-  error: string | null;
-  message: string | null;
-};
-
-export async function getWorkoutPlanAction(prevState: WorkoutPlanState, formData: FormData): Promise<WorkoutPlanState> {
-  const validatedFields = workoutPlanSchema.safeParse({
-    days: formData.get('days'),
-    goals: formData.get('goals'),
-  });
-
-  if (!validatedFields.success) {
-    const errorMessages = validatedFields.error.errors.map(e => e.message).join(', ');
-    return {
-      data: null,
-      error: `إدخال غير صالح: ${errorMessages}`,
-      message: 'فشل التحقق من الصحة.',
-    };
-  }
-
-  try {
-    const plan = await generateWorkoutPlan(validatedFields.data as WorkoutPlanInput);
-    return {
-      data: plan,
-      error: null,
-      message: 'تم إنشاء خطة التمرين بنجاح!',
-    };
-  } catch (e) {
-    const errorMessage = e instanceof Error ? e.message : 'حدث خطأ غير معروف.';
-    return {
-      data: null,
-      error: `فشل إنشاء خطة التمرين: ${errorMessage}`,
-      message: 'فشل إنشاء الذكاء الاصطناعي.',
     };
   }
 }
