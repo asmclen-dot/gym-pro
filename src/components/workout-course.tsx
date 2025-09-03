@@ -463,42 +463,31 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
             return;
         }
 
-        const exercisesToCalculate = dayData.exercises
-            .map(e => {
-                const exerciseData: any = {
-                    name: e.name,
-                    type: e.type,
-                };
-    
-                const duration = getNumericValue(e.actualDuration);
-                const sets = getNumericValue(e.actualSets);
-                const reps = getNumericValue(e.actualReps);
-                const weight = getNumericValue(e.actualWeight);
+        const exercisesToCalculate = dayData.exercises.map(e => {
+            const exerciseData: any = {
+                name: e.name,
+                type: e.type,
+            };
 
-                let hasMetrics = false;
-    
-                if (e.type !== 'strength') {
-                    if (duration) {
-                        exerciseData.durationInMinutes = duration;
-                        hasMetrics = true;
-                    }
-                } else {
-                    if (sets) {
-                        exerciseData.sets = sets;
-                        hasMetrics = true;
-                    }
-                    if (reps) {
-                        exerciseData.reps = reps;
-                        hasMetrics = true;
-                    }
-                    if (weight) {
-                        exerciseData.weight = weight;
-                    }
-                }
+            const duration = getNumericValue(e.actualDuration) ?? e.targetDuration;
+            const sets = getNumericValue(e.actualSets) ?? e.targetSets;
+            const reps = getNumericValue(e.actualReps) ?? e.targetReps;
+            const weight = getNumericValue(e.actualWeight) ?? e.targetWeight;
 
-                return hasMetrics ? exerciseData : null;
-            })
-            .filter((e): e is NonNullable<typeof e> => e !== null);
+            if (e.type !== 'strength') {
+                if (duration) exerciseData.durationInMinutes = duration;
+            } else {
+                if (sets) exerciseData.sets = sets;
+                if (reps) exerciseData.reps = reps;
+                if (weight) exerciseData.weight = weight;
+            }
+            
+            // Ensure there's at least one metric to calculate with
+            if (Object.keys(exerciseData).length > 2) {
+                return exerciseData;
+            }
+            return null;
+        }).filter(Boolean);
         
         if (exercisesToCalculate.length === 0) {
             console.error("No valid exercise data to calculate.");
@@ -682,3 +671,5 @@ export function WorkoutCourse() {
 
     return <CourseRegistration onCourseCreate={setCourseConfig} />;
 }
+
+    
