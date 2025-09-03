@@ -466,7 +466,10 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
             </CardHeader>
             <CardContent>
                 <Accordion type="multiple" defaultValue={['day-1']} className="w-full">
-                    {plan.map(({ day, exercises, targetTime }) => (
+                    {plan.map(({ day, exercises, targetTime }) => {
+                        const allExercisesDone = exercises.length > 0 && exercises.every(ex => ex.done);
+
+                        return (
                         <AccordionItem value={`day-${day}`} key={day}>
                             <AccordionTrigger className="text-lg font-semibold">
                                  <div className='flex items-center justify-between w-full pr-2'>
@@ -504,7 +507,7 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
                                                      <div className="flex items-center gap-2">
                                                         <Label htmlFor={`ex-done-${ex.id}`} className='cursor-pointer text-sm font-semibold'>تم</Label>
                                                         <Input type='checkbox' id={`ex-done-${ex.id}`} className='h-5 w-5 accent-primary' 
-                                                          checked={ex.done}
+                                                          checked={!!ex.done}
                                                           onChange={(e) => handlePerformanceChange(day, ex.id, 'done', e.target.checked)}
                                                         />
                                                     </div>
@@ -536,7 +539,7 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
                                             </div>
                                         ))}
                                         <div className='flex justify-between items-center pt-4'>
-                                             <Button onClick={() => handleCalculate(day)} disabled={loadingDay === day}>
+                                             <Button onClick={() => handleCalculate(day)} disabled={loadingDay === day || !allExercisesDone}>
                                                 {loadingDay === day ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Flame className='ml-2 h-4 w-4'/>}
                                                 {loadingDay === day ? 'جارٍ الحساب...' : 'حساب سعرات اليوم'}
                                             </Button>
@@ -551,7 +554,8 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
                                 )}
                             </AccordionContent>
                         </AccordionItem>
-                    ))}
+                        );
+                    })}
                 </Accordion>
             </CardContent>
         </Card>
@@ -597,5 +601,3 @@ export function WorkoutCourse() {
 
     return <CourseRegistration onCourseCreate={setCourseConfig} />;
 }
-
-    
