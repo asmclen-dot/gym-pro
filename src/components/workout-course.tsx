@@ -469,16 +469,19 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
                     type: e.type,
                 };
     
-                const duration = getNumericValue(e.actualDuration) ?? getNumericValue(e.targetDuration);
-                const sets = getNumericValue(e.actualSets) ?? getNumericValue(e.targetSets);
-                const reps = getNumericValue(e.actualReps) ?? getNumericValue(e.targetReps);
-                const weight = getNumericValue(e.actualWeight) ?? getNumericValue(e.targetWeight);
+                const duration = getNumericValue(e.actualDuration);
+                const sets = getNumericValue(e.actualSets);
+                const reps = getNumericValue(e.actualReps);
+                const weight = getNumericValue(e.actualWeight);
     
-                if (duration) exerciseData.durationInMinutes = duration;
-                if (sets) exerciseData.sets = sets;
-                if (reps) exerciseData.reps = reps;
-                if (weight) exerciseData.weight = weight;
-    
+                if (e.type !== 'strength') {
+                    if (duration) exerciseData.durationInMinutes = duration;
+                } else {
+                    if (sets) exerciseData.sets = sets;
+                    if (reps) exerciseData.reps = reps;
+                    if (weight) exerciseData.weight = weight;
+                }
+
                 // Only include if it has some metric to calculate
                 if (Object.keys(exerciseData).length > 2) {
                     return exerciseData;
@@ -487,6 +490,12 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
             })
             .filter(Boolean);
         
+        if (exercisesToCalculate.length === 0) {
+            console.error("No valid exercise data to calculate.");
+            setLoadingDay(null);
+            return;
+        }
+
         const formData = new FormData();
         formData.append('type', 'full_day');
         formData.append('exercises', JSON.stringify(exercisesToCalculate));

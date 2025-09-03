@@ -6,35 +6,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-
-const ExerciseSchema = z.object({
-    id: z.string().describe("A unique identifier for the exercise, like a UUID."),
-    name: z.string().describe("The name of the exercise in Arabic."),
-    type: z.enum(['strength', 'cardio', 'flexibility']).describe("The type of exercise."),
-    targetSets: z.number().optional().describe("The target number of sets. Only for 'strength' type."),
-    targetReps: z.number().optional().describe("The target number of repetitions per set. Only for 'strength' type."),
-    targetDuration: z.number().optional().describe("The target duration of the exercise in minutes. Only for 'cardio' or 'flexibility' types."),
-    targetWeight: z.number().optional().describe("The suggested starting weight for the exercise in kilograms. Only for 'strength' type."),
-    done: z.boolean().optional().default(false).describe("Whether the exercise has been completed."),
-});
-
-const WorkoutDaySchema = z.object({
-    day: z.number().describe("The day number of the workout, e.g., 1, 2, 3."),
-    targetTime: z.enum(['morning', 'afternoon', 'evening', '']).describe("The target time of day for the workout."),
-    exercises: z.array(ExerciseSchema).describe("A list of exercises for this specific day."),
-});
-
-export const GenerateWorkoutPlanInputSchema = z.object({
-  daysPerWeek: z.number().min(1).max(7).describe("The number of days the user wants to work out per week."),
-  workoutType: z.enum(['strength', 'cardio', 'mixed']).describe("The primary focus of the workout plan."),
-});
-export type GenerateWorkoutPlanInput = z.infer<typeof GenerateWorkoutPlanInputSchema>;
-
-export const GenerateWorkoutPlanOutputSchema = z.object({
-    plan: z.array(WorkoutDaySchema).describe("The generated workout plan, with one entry per workout day."),
-});
-export type GenerateWorkoutPlanOutput = z.infer<typeof GenerateWorkoutPlanOutputSchema>;
+import { GenerateWorkoutPlanInputSchema, GenerateWorkoutPlanOutputSchema, GenerateWorkoutPlanInput } from '@/app/actions';
 
 
 const prompt = ai.definePrompt({
@@ -59,7 +31,7 @@ Instructions:
 `,
 });
 
-export const generateWorkoutPlanFlow = ai.defineFlow(
+const flow = ai.defineFlow(
   {
     name: 'generateWorkoutPlanFlow',
     inputSchema: GenerateWorkoutPlanInputSchema,
@@ -70,3 +42,7 @@ export const generateWorkoutPlanFlow = ai.defineFlow(
     return output!;
   }
 );
+
+export async function generateWorkoutPlanFlow(input: GenerateWorkoutPlanInput) {
+    return await flow(input);
+}

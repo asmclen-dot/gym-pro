@@ -2,7 +2,7 @@
 
 import { generatePersonalizedRecipe, PersonalizedRecipeInput } from '@/ai/flows/personalized-recipe-generation';
 import { estimateWorkoutCalories, WorkoutCalorieEstimationInput, ExerciseDetail } from '@/ai/flows/workout-calorie-estimation';
-import { generateWorkoutPlanFlow, GenerateWorkoutPlanOutput, GenerateWorkoutPlanInputSchema as AIInputSchema } from '@/ai/flows/generate-workout-plan';
+import { generateWorkoutPlanFlow } from '@/ai/flows/generate-workout-plan';
 import { z } from 'zod';
 
 const recipeSchema = z.object({
@@ -71,26 +71,7 @@ const workoutSchema = z.discriminatedUnion("type", [
   }),
   z.object({
     type: z.literal("full_day"),
-    exercises: z.string().transform((str, ctx) => {
-      try {
-        const parsed = JSON.parse(str);
-        const validated = z.array(exerciseDetailSchema).safeParse(parsed);
-        if (!validated.success) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "Invalid exercise structure in JSON string.",
-          });
-          return z.NEVER;
-        }
-        return validated.data as ExerciseDetail[];
-      } catch (e) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Invalid JSON string for exercises.",
-        });
-        return z.NEVER;
-      }
-    }),
+    exercises: z.array(exerciseDetailSchema),
   }),
 ]);
 
@@ -111,7 +92,16 @@ export async function getWorkoutCaloriesAction(prevState: WorkoutState, formData
   };
 
   if (type === 'full_day') {
-    rawData.exercises = formData.get('exercises');
+    try {
+        const exercisesStr = formData.get('exercises') as string;
+        rawData.exercises = JSON.parse(exercisesStr);
+    } catch (e) {
+        return {
+            data: null,
+            error: "Invalid JSON string for exercises.",
+            message: 'فشل التحقق من الصحة.',
+        };
+    }
   } else {
     rawData.exerciseName = formData.get('exerciseName');
     if (formData.has('durationInMinutes')) {
@@ -158,8 +148,34 @@ export async function getWorkoutCaloriesAction(prevState: WorkoutState, formData
 }
 
 // Action for AI workout plan generation
-export const GenerateWorkoutPlanInputSchema = AIInputSchema;
+export const AIExerciseSchema = z.object({
+    id: z.string().describe("A unique identifier for the exercise, like a UUID."),
+    name: z.string().describe("The name of the exercise in Arabic."),
+    type: z.enum(['strength', 'cardio', 'flexibility']).describe("The type of exercise."),
+    targetSets: z.number().optional().describe("The target number of sets. Only for 'strength' type."),
+    targetReps: z.number().optional().describe("The target number of repetitions per set. Only for 'strength' type."),
+    targetDuration: z.number().optional().describe("The target duration of the exercise in minutes. Only for 'cardio' or 'flexibility' types."),
+    targetWeight: z.number().optional().describe("The suggested starting weight for the exercise in kilograms. Only for 'strength' type."),
+    done: z.boolean().optional().default(false).describe("Whether the exercise has been completed."),
+});
+
+export const AIWorkoutDaySchema = z.object({
+    day: z.number().describe("The day number of the workout, e.g., 1, 2, 3."),
+    targetTime: z.enum(['morning', 'afternoon', 'evening', '']).describe("The target time of day for the workout."),
+    exercises: z.array(AIExerciseSchema).describe("A list of exercises for this specific day."),
+});
+
+export const GenerateWorkoutPlanInputSchema = z.object({
+  daysPerWeek: z.number().min(1).max(7).describe("The number of days the user wants to work out per week."),
+  workoutType: z.enum(['strength', 'cardio', 'mixed']).describe("The primary focus of the workout plan."),
+});
 export type GenerateWorkoutPlanInput = z.infer<typeof GenerateWorkoutPlanInputSchema>;
+
+export const GenerateWorkoutPlanOutputSchema = z.object({
+    plan: z.array(AIWorkoutDaySchema).describe("The generated workout plan, with one entry per workout day."),
+});
+export type GenerateWorkoutPlanOutput = z.infer<typeof GenerateWorkoutPlanOutputSchema>;
+
 
 export type AIPlanState = {
     data: GenerateWorkoutPlanOutput | null;
@@ -169,7 +185,8 @@ export type AIPlanState = {
 
 export async function generateAIPlanAction(input: GenerateWorkoutPlanInput): Promise<AIPlanState> {
     try {
-        const plan = await generateWorkoutPlanFlow(input);
+        const validatedInput = GenerateWorkoutPlanInputSchema.parse(input);
+        const plan = await generateWorkoutPlanFlow(validatedInput);
         return {
             data: plan,
             error: null,
