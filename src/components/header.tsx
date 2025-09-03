@@ -1,5 +1,6 @@
 import { Leaf } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ThemeToggle } from './theme-toggle';
 
 export function Header() {
   return (
@@ -12,10 +13,13 @@ export function Header() {
           صحة كوتش
         </h1>
       </div>
-      <Avatar>
-        <AvatarImage src="https://picsum.photos/100/100" alt="الصورة الرمزية للمستخدم" data-ai-hint="person face" />
-        <AvatarFallback>U</AvatarFallback>
-      </Avatar>
+      <div className="flex items-center gap-4">
+        <ThemeToggle />
+        <Avatar>
+          <AvatarImage src="https://picsum.photos/100/100" alt="الصورة الرمزية للمستخدم" data-ai-hint="person face" />
+          <AvatarFallback>U</AvatarFallback>
+        </Avatar>
+      </div>
     </header>
   );
 }
