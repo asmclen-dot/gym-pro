@@ -477,10 +477,10 @@ function WorkoutPlanDisplay({ plan: initialPlan, onEdit }: { plan: WorkoutDay[],
                             <AccordionTrigger className="text-lg font-semibold">
                                  <div className='flex items-center justify-between w-full pr-2'>
                                     <span>يوم التمرين {day}</span>
-                                    {targetTime && <span className='text-sm font-normal text-muted-foreground bg-muted px-2 py-1 rounded-md'>{targetTime === 'morning' ? 'صباحًا' : targetTime === 'afternoon' ? 'ظهرًا' : 'مساءً'}</span>}
                                 </div>
                             </AccordionTrigger>
                             <AccordionContent className="space-y-4 pt-4">
+                                {targetTime && <div className='text-sm font-semibold text-muted-foreground bg-muted px-2 py-1 rounded-md max-w-fit'>{targetTime === 'morning' ? 'صباحًا' : targetTime === 'afternoon' ? 'ظهرًا' : 'مساءً'}</div>}
                                 {exercises.length === 0 ? (
                                     <div className="text-center text-muted-foreground p-4 border rounded-lg">
                                         <p>لا توجد تمارين لهذا اليوم.</p>
