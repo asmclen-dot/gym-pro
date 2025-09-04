@@ -17,8 +17,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        body: ['Almarai', 'sans-serif'],
-        headline: ['Almarai', 'sans-serif'],
+        body: 'Almarai, sans-serif',
+        headline: 'Almarai, sans-serif',
       },
       colors: {
         border: "hsl(var(--border))",
