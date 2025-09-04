@@ -3,6 +3,7 @@
 
 
 
+
 "use client";
 
 import React, { useState, useMemo, useEffect, useTransition } from 'react';
@@ -664,10 +665,28 @@ function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset, onRes
                             <Edit className='h-5 w-5' />
                             <span className='sr-only'>تعديل الكورس</span>
                         </Button>
-                        <Button variant="destructive" size="icon" onClick={onReset}>
-                            <RefreshCw className='h-5 w-5' />
-                            <span className='sr-only'>إعادة تعيين الكورس</span>
-                        </Button>
+                         <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="icon">
+                                    <RefreshCw className='h-5 w-5' />
+                                    <span className='sr-only'>إعادة تعيين الكورس</span>
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                   سيؤدي هذا الإجراء إلى حذف خطة التمرين الحالية بالكامل والبدء من جديد. لا يمكن التراجع عن هذا الإجراء.
+                                </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                <AlertDialogAction onClick={onReset}>
+                                    نعم، حذف الخطة
+                                </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     </div>
                 </CardHeader>
                 {activeDayData && <WorkoutDayDisplay day={activeDayData} onPerformanceChange={handlePerformanceChange} onComplete={handleCompleteDay} isLoading={isLoading} />}

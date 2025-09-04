@@ -14,7 +14,7 @@ const prompt = ai.definePrompt({
   prompt: `You are a world-class fitness and wellness coach.
 Your task is to provide a user with a piece of content for their post-workout "cooldown zone".
 The content must be in Arabic.
-Generate one short, actionable nutritional tip and one powerful motivational quote.
+Generate one short, actionable, and scientific nutritional tip AND one powerful, concise motivational quote related to fitness, perseverance, or health.
 The entire response must be in the specified JSON format. Do not add any conversational text.
 `,
 });
