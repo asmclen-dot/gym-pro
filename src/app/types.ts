@@ -27,6 +27,7 @@ export type AIWorkoutDay = z.infer<typeof AIWorkoutDaySchema>;
 export const GenerateWorkoutPlanInputSchema = z.object({
   daysPerWeek: z.number().min(1).max(7).describe("The number of days the user wants to work out per week."),
   workoutType: z.enum(['strength', 'cardio', 'mixed']).describe("The primary focus of the workout plan."),
+  coachPersona: z.enum(['default', 'ninja', 'sage']).optional().describe("The selected AI coach persona."),
 });
 export type GenerateWorkoutPlanInput = z.infer<typeof GenerateWorkoutPlanInputSchema>;
 
@@ -44,7 +45,8 @@ export const FitnessReportInputSchema = z.object({
     calories: z.number().optional().describe("Net calories for that day (food minus workout)."),
     steps: z.number().optional().describe("Number of steps for that day."),
   })).describe("An object where keys are dates (YYYY-MM-DD) and values are the data for that day."),
-  userWeightKg: z.number().optional().describe("The user's current weight in kilograms to improve estimation accuracy.")
+  userWeightKg: z.number().optional().describe("The user's current weight in kilograms to improve estimation accuracy."),
+  coachPersona: z.enum(['default', 'ninja', 'sage']).optional().describe("The selected AI coach persona."),
 });
 export type FitnessReportInput = z.infer<typeof FitnessReportInputSchema>;
 

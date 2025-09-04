@@ -1,9 +1,4 @@
 
-
-
-
-
-
 "use client";
 
 import React, { useState, useMemo, useEffect, useTransition } from 'react';
@@ -165,9 +160,23 @@ function WorkoutPlanSetup({ config, existingPlan, onSave, onCancel }: { config: 
 
     const handleGenerateAIPlan = async () => {
         setIsGenerating(true);
+        let coachPersona: 'default' | 'ninja' | 'sage' = 'default';
+        try {
+            const settingsData = localStorage.getItem('userSettings');
+            if (settingsData) {
+                const parsedSettings = JSON.parse(settingsData);
+                if (parsedSettings.coachPersona) {
+                    coachPersona = parsedSettings.coachPersona;
+                }
+            }
+        } catch (error) {
+            console.error("Failed to read coach persona from localStorage", error);
+        }
+
         const result: AIPlanState = await generateAIPlanAction({
             daysPerWeek: config.daysPerWeek,
-            workoutType: config.workoutType as 'strength' | 'cardio' | 'mixed'
+            workoutType: config.workoutType as 'strength' | 'cardio' | 'mixed',
+            coachPersona: coachPersona
         });
         if (result.data?.plan) {
             setWorkoutDays(result.data.plan.map(day => ({...day, exercises: day.exercises.map(ex => ({...ex, done: false})) })));

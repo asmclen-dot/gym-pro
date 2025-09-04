@@ -63,6 +63,7 @@ export function ReportsGenerator({ className }: React.HTMLAttributes<"div">) {
     const interval = eachDayOfInterval({ start: date.from, end: date.to });
     const dailyData: FitnessReportInput['dailyData'] = {};
     let userWeight: number | undefined;
+    let coachPersona: 'default' | 'ninja' | 'sage' = 'default';
 
     try {
         const settingsData = localStorage.getItem('userSettings');
@@ -71,9 +72,12 @@ export function ReportsGenerator({ className }: React.HTMLAttributes<"div">) {
             if (parsedSettings.weight) {
                 userWeight = Number(parsedSettings.weight);
             }
+            if (parsedSettings.coachPersona) {
+                coachPersona = parsedSettings.coachPersona;
+            }
         }
     } catch (error) {
-        console.error("Failed to read weight from localStorage", error);
+        console.error("Failed to read user settings from localStorage", error);
     }
 
 
@@ -103,7 +107,8 @@ export function ReportsGenerator({ className }: React.HTMLAttributes<"div">) {
       startDate: format(date.from, 'yyyy-MM-dd'),
       endDate: format(date.to, 'yyyy-MM-dd'),
       dailyData: dailyData,
-      userWeightKg: userWeight
+      userWeightKg: userWeight,
+      coachPersona: coachPersona
     };
 
     const result = await getReportAction(input);

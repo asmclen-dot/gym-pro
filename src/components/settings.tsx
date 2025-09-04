@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Save, User, Weight, Target, Footprints, Flame, Wand2, Loader2, PersonStanding, Cake, Activity, AlertTriangle, Trash2 } from 'lucide-react';
+import { Save, User, Weight, Target, Footprints, Flame, Wand2, Loader2, PersonStanding, Cake, Activity, AlertTriangle, Trash2, Bot, Ghost, ShieldHalf } from 'lucide-react';
 import { Progress } from './ui/progress';
 import { getGoalSuggestionAction, SuggestionState } from '@/app/actions';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
@@ -23,6 +23,7 @@ interface UserSettings {
     age: number | string;
     gender: 'male' | 'female' | '';
     mainGoal: 'lose_weight' | 'gain_muscle' | 'maintain' | '';
+    coachPersona: 'default' | 'ninja' | 'sage' | '';
     weeklyCalorieTarget: number | string;
     dailyStepTarget: number | string;
 }
@@ -36,6 +37,7 @@ export function Settings() {
         age: '',
         gender: '',
         mainGoal: '',
+        coachPersona: 'default',
         weeklyCalorieTarget: '',
         dailyStepTarget: '',
     });
@@ -47,7 +49,12 @@ export function Settings() {
         try {
             const savedSettings = localStorage.getItem('userSettings');
             if (savedSettings) {
-                setSettings(JSON.parse(savedSettings));
+                const parsedSettings = JSON.parse(savedSettings);
+                // Ensure coachPersona has a default value
+                if (!parsedSettings.coachPersona) {
+                    parsedSettings.coachPersona = 'default';
+                }
+                setSettings(parsedSettings);
             }
         } catch (error) {
             console.error("Failed to load settings from localStorage", error);
@@ -92,7 +99,9 @@ export function Settings() {
     const handleInputChange = <K extends keyof UserSettings>(field: K, value: UserSettings[K]) => {
         const newSettings = { ...settings, [field]: value };
         setSettings(newSettings);
-        debouncedSuggestGoals(newSettings);
+        if (['weight', 'height', 'age', 'gender', 'mainGoal'].includes(field as string)) {
+             debouncedSuggestGoals(newSettings);
+        }
     };
 
     const handleSave = () => {
@@ -129,6 +138,12 @@ export function Settings() {
     const weeklyCalorieProgress = Math.min(((Number(settings.weeklyCalorieTarget) || 0) / 25000) * 100, 100);
     const dailyStepProgress = Math.min(((Number(settings.dailyStepTarget) || 0) / 15000) * 100, 100);
 
+    const coachPersonas = [
+        { id: 'default', name: 'المدرب الافتراضي', description: 'تشجيعي، واضح، ومباشر.', icon: <ShieldHalf /> },
+        { id: 'ninja', name: 'النينجا الحماسي', description: 'سريع، قوي، ويركز على الانضباط.', icon: <Ghost /> },
+        { id: 'sage', name: 'الحكيم الهادئ', description: 'ملهم، صبور، ويركز على التوازن.', icon: <Bot /> }
+    ];
+
     return (
         <div className="grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-6">
@@ -149,6 +164,26 @@ export function Settings() {
                                 />
                             </div>
                             
+                            <Separator />
+
+                            <RadioGroup value={settings.coachPersona} onValueChange={(value) => handleInputChange('coachPersona', value as UserSettings['coachPersona'])} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <Label className="md:col-span-3 text-base flex items-center gap-2 mb-2">اختر شخصية مدربك</Label>
+                                {coachPersonas.map((persona) => (
+                                <Label htmlFor={persona.id} key={persona.id} className="flex flex-col p-4 border rounded-lg cursor-pointer hover:bg-accent/50 has-[:checked]:bg-accent has-[:checked]:border-primary">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            {React.cloneElement(persona.icon, { className: 'h-6 w-6' })}
+                                            <span className="font-bold">{persona.name}</span>
+                                        </div>
+                                        <RadioGroupItem value={persona.id} id={persona.id} />
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-2">{persona.description}</p>
+                                </Label>
+                                ))}
+                            </RadioGroup>
+
+                            <Separator />
+
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                <div className="space-y-2">
                                     <Label htmlFor="weight" className='flex items-center gap-2'><Weight className='h-4 w-4'/> وزنك (كغ)</Label>

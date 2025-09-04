@@ -8,12 +8,22 @@
 import {ai} from '@/ai/genkit';
 import { GenerateWorkoutPlanInputSchema, GenerateWorkoutPlanOutputSchema, GenerateWorkoutPlanInput } from '@/app/types';
 
+const personaInstructions = {
+  default: `You are an expert fitness coach. Your task is to create a structured and balanced workout plan for a user based on their preferences. The response must be in Arabic.`,
+  ninja: `You are a Ninja Fitness Master. Your dojo is ready. Create a secret training scroll (workout plan) for the young warrior. Be precise, disciplined, and motivational. The response must be in Arabic.`,
+  sage: `You are a wise Fitness Sage. Your task is to craft a path of mindful movement (a workout plan) for the seeker of balance. The plan should be harmonious and promote inner and outer strength. The response must be in Arabic.`,
+};
 
 const prompt = ai.definePrompt({
   name: 'generateWorkoutPlanPrompt',
   input: {schema: GenerateWorkoutPlanInputSchema},
   output: {schema: GenerateWorkoutPlanOutputSchema},
-  prompt: `You are an expert fitness coach. Your task is to create a structured and balanced workout plan for a user based on their preferences. The response must be in Arabic.
+  prompt: `
+{{#if coachPersona}}
+{{{lookup personaInstructions coachPersona}}}
+{{else}}
+You are an expert fitness coach. Your task is to create a structured and balanced workout plan for a user based on their preferences. The response must be in Arabic.
+{{/if}}
 
 User Preferences:
 - Days per week: {{{daysPerWeek}}}
@@ -38,7 +48,7 @@ const flow = ai.defineFlow(
     outputSchema: GenerateWorkoutPlanOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const {output} = await prompt({...input, personaInstructions});
     return output!;
   }
 );
