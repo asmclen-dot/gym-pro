@@ -16,11 +16,11 @@ const getAudio = (src: string): HTMLAudioElement => {
 };
 
 // A map of sound types to their audio file URLs.
-// These are short, royalty-free sounds from Pixabay.
+// Using more reliable sources for the audio files.
 const soundMap = {
-    click: 'https://cdn.pixabay.com/audio/2022/03/15/audio_2491f84561.mp3', // Simple soft click
-    complete: 'https://cdn.pixabay.com/audio/2022/11/17/audio_88f14f6c37.mp3', // A 'pop' sound for completion
-    success: 'https://cdn.pixabay.com/audio/2022/08/23/audio_86fba9c47f.mp3', // A more triumphant success sound
+    click: 'https://cdn.freesound.org/previews/476/476148_6424652-lq.mp3', // Simple soft click
+    complete: 'https://cdn.freesound.org/previews/264/264835_4486188-lq.mp3', // A 'pop' sound for completion
+    success: 'https://cdn.freesound.org/previews/391/391539_5121236-lq.mp3', // A more triumphant success sound
 };
 
 type SoundType = keyof typeof soundMap;
