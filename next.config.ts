@@ -29,9 +29,8 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '2mb',
       serverActionsBodySizeLimit: '2mb',
     },
+    serverActionsTimeout: 120
   },
-  // Increase timeout to 2 minutes to allow for long-running AI operations.
-  serverActionsTimeout: 120,
 };
 
 export default nextConfig;
