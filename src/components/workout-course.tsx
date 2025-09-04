@@ -537,6 +537,8 @@ function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset, onRes
     const [caloriesResult, setCaloriesResult] = useState<number | null>(null);
     const [cooldownContent, setCooldownContent] = useState<CooldownContentOutput | null>(null);
     const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
+    const [performanceData, setPerformanceData] = useState<{name: string, weight: number}[]>([]);
+
 
     const activeDayData = plan.find(d => d.day === currentDay);
     const isCourseFinished = !activeDayData;
@@ -565,6 +567,7 @@ function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset, onRes
     const handleCompleteDay = async () => {
         if (!activeDayData) return;
         startTransition(async () => {
+            const performanceToSave: {name: string, weight: number}[] = [];
             const exercisesToCalculate = activeDayData.exercises
                 .map(e => {
                     const exerciseData: WorkoutCalorieEstimationInput = {
@@ -582,7 +585,10 @@ function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset, onRes
                     } else {
                         if (sets) exerciseData.sets = sets;
                         if (reps) exerciseData.reps = reps;
-                        if (weight) exerciseData.weight = weight;
+                        if (weight) {
+                            exerciseData.weight = weight;
+                            performanceToSave.push({ name: e.name, weight: weight });
+                        }
                     }
                     return (exerciseData.durationInMinutes || (exerciseData.sets && exerciseData.reps)) ? exerciseData : null;
                 })
@@ -616,27 +622,35 @@ function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset, onRes
 
             
             setCaloriesResult(calculatedCalories);
+            setPerformanceData(performanceToSave);
             setIsResultDialogOpen(true);
         });
     };
 
     const handleConfirmAndProceed = () => {
-         if (caloriesResult !== null) {
-            const today = format(new Date(), 'yyyy-MM-dd');
-            try {
-                const dayStorage = JSON.parse(localStorage.getItem(today) || '{}');
+        const today = format(new Date(), 'yyyy-MM-dd');
+         try {
+            const dayStorage = JSON.parse(localStorage.getItem(today) || '{}');
+            
+            if (caloriesResult !== null) {
                 const existingCalories = dayStorage.workoutCalories || 0;
                 dayStorage.workoutCalories = existingCalories + caloriesResult;
-                localStorage.setItem(today, JSON.stringify(dayStorage));
-            } catch (error) {
-                localStorage.setItem(today, JSON.stringify({ workoutCalories: caloriesResult }));
             }
+            if (performanceData.length > 0) {
+                 const existingPerformance = dayStorage.workoutPerformance || [];
+                 dayStorage.workoutPerformance = [...existingPerformance, ...performanceData];
+            }
+
+            localStorage.setItem(today, JSON.stringify(dayStorage));
+        } catch (error) {
+            console.error("Failed to save daily data to localStorage", error);
         }
         
         // Move to next day
         onProgressChange({ ...progress, currentDay: currentDay + 1 });
         setCaloriesResult(null);
         setCooldownContent(null);
+        setPerformanceData([]);
         setIsResultDialogOpen(false);
     }
 

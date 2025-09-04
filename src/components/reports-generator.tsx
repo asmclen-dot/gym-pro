@@ -3,7 +3,7 @@
 import * as React from "react"
 import { format, subDays, eachDayOfInterval } from "date-fns"
 import { arSA } from "date-fns/locale"
-import { Calendar as CalendarIcon, Loader2, FileText, BrainCircuit, BarChart, Utensils, Dumbbell, TrendingDown, ClipboardList } from "lucide-react"
+import { Calendar as CalendarIcon, Loader2, FileText, BrainCircuit, BarChart, Utensils, Dumbbell, TrendingDown, ClipboardList, TrendingUp } from "lucide-react"
 import { DateRange } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
@@ -90,16 +90,19 @@ export function ReportsGenerator({ className }: React.HTMLAttributes<"div">) {
                 const foodCalories = parsedData.foods?.reduce((acc: number, food: any) => acc + (food.calories || 0), 0) || 0;
                 const workoutCalories = parsedData.workoutCalories || 0;
                 const steps = parsedData.steps || 0;
+                const workout = parsedData.workoutPerformance || [];
+
                 dailyData[dateString] = { 
                     calories: foodCalories - workoutCalories,
-                    steps: steps
+                    steps: steps,
+                    workout: workout
                 };
             } else {
-                dailyData[dateString] = { calories: 0, steps: 0 };
+                dailyData[dateString] = { calories: 0, steps: 0, workout: [] };
             }
         } catch (error) {
             console.error(`Failed to parse data for ${dateString}:`, error);
-            dailyData[dateString] = { calories: 0, steps: 0 };
+            dailyData[dateString] = { calories: 0, steps: 0, workout: [] };
         }
     });
 
@@ -125,6 +128,7 @@ export function ReportsGenerator({ className }: React.HTMLAttributes<"div">) {
         case 'summary': return <ClipboardList className="h-6 w-6 text-primary" />;
         case 'diet': return <Utensils className="h-6 w-6 text-primary" />;
         case 'workout': return <Dumbbell className="h-6 w-6 text-primary" />;
+        case 'strength': return <TrendingUp className="h-6 w-6 text-primary" />;
         case 'results': return <TrendingDown className="h-6 w-6 text-primary" />;
         case 'recommendations': return <BrainCircuit className="h-6 w-6 text-primary" />;
         default: return <FileText className="h-6 w-6 text-primary" />;
@@ -220,6 +224,13 @@ export function ReportsGenerator({ className }: React.HTMLAttributes<"div">) {
                   <div>
                       <h4 className="font-bold text-lg">تحليل التمارين</h4>
                       <p className="text-muted-foreground whitespace-pre-line">{state.data.workoutAnalysis}</p>
+                  </div>
+              </div>
+               <div className="p-4 bg-secondary/50 rounded-lg flex items-start gap-4">
+                  <ReportIcon section="strength" />
+                  <div>
+                      <h4 className="font-bold text-lg">تحليل تطور القوة</h4>
+                      <p className="text-muted-foreground whitespace-pre-line">{state.data.strengthProgression}</p>
                   </div>
               </div>
                <Separator />

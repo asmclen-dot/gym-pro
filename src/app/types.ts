@@ -44,6 +44,10 @@ export const FitnessReportInputSchema = z.object({
   dailyData: z.record(z.object({
     calories: z.number().optional().describe("Net calories for that day (food minus workout)."),
     steps: z.number().optional().describe("Number of steps for that day."),
+    workout: z.array(z.object({
+        name: z.string().describe("Name of the strength exercise performed."),
+        weight: z.number().describe("Weight lifted for the exercise in kg.")
+    })).optional().describe("A list of strength exercises performed on that day.")
   })).describe("An object where keys are dates (YYYY-MM-DD) and values are the data for that day."),
   userWeightKg: z.number().optional().describe("The user's current weight in kilograms to improve estimation accuracy."),
   coachPersona: z.enum(['default', 'ninja', 'sage']).optional().describe("The selected AI coach persona."),
@@ -54,6 +58,7 @@ export const FitnessReportOutputSchema = z.object({
     periodSummary: z.string().describe("A summary of the user's performance during the period in Arabic. Include average daily calories and steps."),
     dietaryAnalysis: z.string().describe("A brief analysis of the user's dietary habits based on the calorie data in Arabic."),
     workoutAnalysis: z.string().describe("A brief analysis of the user's workout consistency and performance in Arabic."),
+    strengthProgression: z.string().describe("An analysis of strength progression in Arabic. Compare performance for the same exercises between the beginning and end of the period. Highlight improvements in weight lifted. If no progress or repeated exercises are found, state that."),
     estimatedResults: z.string().describe("An estimation of the results, like fat loss, in Arabic. Base this on a 7700 calorie deficit for 1kg of fat loss. Be encouraging and scientific."),
     recommendations: z.string().describe("Actionable recommendations for the next period to improve results, in Arabic.")
 });
