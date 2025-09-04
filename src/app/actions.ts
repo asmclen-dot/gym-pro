@@ -1,14 +1,16 @@
+
 'use server';
 
 import { generatePersonalizedRecipe, PersonalizedRecipeInput } from '@/ai/flows/personalized-recipe-generation';
 import { estimateWorkoutCalories, WorkoutCalorieEstimationInput } from '@/ai/flows/workout-calorie-estimation';
 import { z } from 'zod';
 import { generateWorkoutPlanFlow } from '@/ai/flows/generate-workout-plan';
-import { GenerateWorkoutPlanInput, GenerateWorkoutPlanOutput, GenerateWorkoutPlanInputSchema } from './types';
+import { GenerateWorkoutPlanInput, GenerateWorkoutPlanOutput, GenerateWorkoutPlanInputSchema, CooldownContentOutput } from './types';
 import { generateFitnessReportFlow } from '@/ai/flows/generate-fitness-report';
 import { FitnessReportInput, FitnessReportInputSchema, FitnessReportOutput } from './types';
 import { suggestFitnessGoalsFlow } from '@/ai/flows/suggest-fitness-goals';
 import { SuggestFitnessGoalsInput, SuggestFitnessGoalsInputSchema, SuggestFitnessGoalsOutput } from './types';
+import { getCooldownContentFlow } from '@/ai/flows/get-cooldown-content';
 
 
 const recipeSchema = z.object({
@@ -244,6 +246,28 @@ export async function getGoalSuggestionAction(input: SuggestFitnessGoalsInput): 
     return {
       data: null,
       error: `فشل اقتراح الأهداف: ${errorMessage}`,
+    };
+  }
+}
+
+
+export type CooldownState = {
+  data: CooldownContentOutput | null;
+  error: string | null;
+};
+
+export async function getCooldownAction(): Promise<CooldownState> {
+  try {
+    const content = await getCooldownContentFlow();
+    return {
+      data: content,
+      error: null,
+    };
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : 'حدث خطأ غير معروف.';
+    return {
+      data: null,
+      error: `فشل جلب محتوى التهدئة: ${errorMessage}`,
     };
   }
 }

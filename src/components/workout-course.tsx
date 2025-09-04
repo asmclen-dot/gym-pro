@@ -1,30 +1,32 @@
 
 
+
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useTransition } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dumbbell, Heart, Combine, PlusCircle, Trash2, CheckSquare, Edit, BrainCircuit, Droplets, Clock, Weight, Repeat, Flame, Loader2, RefreshCw, PartyPopper, CheckCircle2, Repeat1 } from 'lucide-react';
+import { Dumbbell, Heart, Combine, PlusCircle, Trash2, CheckSquare, Edit, BrainCircuit, Droplets, Clock, Weight, Repeat, Flame, Loader2, RefreshCw, PartyPopper, CheckCircle2, Repeat1, BookOpen, Lightbulb } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { generateAIPlanAction, AIPlanState } from '@/app/actions';
-import { GenerateWorkoutPlanInput, AIWorkoutDay, AIExercise } from '@/app/types';
+import { generateAIPlanAction, AIPlanState, getCooldownAction, CooldownState } from '@/app/actions';
+import { GenerateWorkoutPlanInput, AIWorkoutDay, AIExercise, CooldownContentOutput } from '@/app/types';
 import { format } from 'date-fns';
 import { Skeleton } from './ui/skeleton';
 import { estimateWorkoutCalories, WorkoutCalorieEstimationInput, WorkoutCalorieEstimationOutput } from '@/ai/flows/workout-calorie-estimation';
+import Image from 'next/image';
 
 
 const exerciseList = [
     // Chest
     "ضغط البنش (Bench Press)", "ضغط البنش المائل (Incline Bench Press)", "ضغط البنش المنحدر (Decline Bench Press)", "ضغط البنش بالدمبل (Dumbbell Bench Press)", "ضغط البنش المائل بالدمبل (Incline Dumbbell Press)", "تفتيح بالدمبل (Dumbbell Flyes)", "تفتيح مائل بالدمبل (Incline Dumbbell Flyes)", "تفتيح بالكابل (Cable Crossover)", "غطس للصدر (Chest Dips)", "ضغط على الأرض (Push-up)", "ضغط على الأرض بقبضة واسعة (Wide-grip Push-up)", "ضغط على الأرض بقبضة ضيقة (Narrow-grip Push-up)", "آلة تفتيح الصدر (Pec-Deck Machine)", "آلة ضغط الصدر (Chest Press Machine)", "ضغط بالبار على آلة سميث (Smith Machine Bench Press)", "ضغط جيلوتين (Guillotine Press)",
     // Back
-    "الرفعة الميتة (Deadlift)", "سحب علوي (Pull-up)", "سحب علوي بقبضة واسعة (Wide-grip Pull-up)", "شين أب (Chin-up)", "تجديف بالبار (Barbell Row)", "تجديف بالبار بقبضة معكوسة (Pendlay Row)", "تجديف بالدمبل بذراع واحدة (One-Arm Dumbbell Row)", "سحب أرضي (Seated Cable Row)", "سحب أمامي (Lat Pulldown)", "سحب خلفي (Behind-the-neck Lat Pulldown)", "تمرين التي-بار (T-Bar Row)", "تمرين السوبرمان (Superman)", "تمرين الجسر (Glute Bridge)", "هايبر اكستنشن (Back Extension)", "تجديف مقلوب (Inverted Row)", "سحب أمامي بقبضة ضيقة (Close-grip Lat Pulldown)", "تمرين الوجه بالسحب (Face Pull)", "تمرين Kroc Rows", "تمرين Good Mornings", "تجديف آلة سميث (Smith Machine Row)",
+    "الرفعة الميتة (Deadlift)", "سحب علوي (Pull-up)", "سحب علوي بقبضة واسعة (Wide-grip Pull-up)", "شين أب (Chin-up)", "تجديف بالبار (Barbell Row)", "تجديف بالبار بقبضة معكوسة (Pendlay Row)", "تجديف بالدمبل بذراع واحدة (One-Arm Dumbbell Row)", "سحب أرضي (Seated Cable Row)", "سحب أمامي (Lat Pulldown)", "سحب خلفي (Behind-the-neck Lat Pulldown)", "تمرين التي-بار (T-Bar Row)", "تمرين السوبرمان (Superman)", "تمرين الجسر (Glute Bridge)", "هايبر اكستنشن (Back Extension)", "تجديف مقلوب (Inverted Row)", "سحب أمامي بقبضة ضيقة (Close-grip Lat Pulld-own)", "تمرين الوجه بالسحب (Face Pull)", "تمرين Kroc Rows", "تمرين Good Mornings", "تجديف آلة سميث (Smith Machine Row)",
     // Legs
     "سكوات (Squat)", "سكوات أمامي (Front Squat)", "سكوات بلغاري (Bulgarian Split Squat)", "ضغط الأرجل (Leg Press)", "اندفاع (Lunge)", "اندفاع جانبي (Side Lunge)", "رفعة رومانية مميتة (Romanian Deadlift)", "رفعة مميتة بساق واحدة (Single Leg Deadlift)", "تجعيد أوتار الركبة (Hamstring Curl)", "تمديد الساق (Leg Extension)", "رفع السمانة (Calf Raise)", "آلة خطف الفخذ (Hip Abduction Machine)", "آلة ضم الفخذ (Hip Adduction Machine)", "سكوات هاك (Hack Squat)", "سكوات القرفصاء (Goblet Squat)", "خطوات الصندوق (Box Step-ups)", "سكوات Zercher", "سكوات Sissy", "قفزة الصندوق (Box Jump)",
     // Shoulders
@@ -515,8 +517,9 @@ function WorkoutDayDisplay({ day, onPerformanceChange, onComplete, isLoading }: 
 
 function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset, onRestart }: { progress: SavedProgress, onProgressChange: (newProgress: SavedProgress) => void, onEdit: () => void, onReset: () => void, onRestart: () => void }) {
     const { plan, currentDay } = progress;
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, startTransition] = useTransition();
     const [caloriesResult, setCaloriesResult] = useState<number | null>(null);
+    const [cooldownContent, setCooldownContent] = useState<CooldownContentOutput | null>(null);
     const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
 
     const activeDayData = plan.find(d => d.day === currentDay);
@@ -545,44 +548,56 @@ function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset, onRes
     
     const handleCompleteDay = async () => {
         if (!activeDayData) return;
-        setIsLoading(true);
+        startTransition(async () => {
+            const exercisesToCalculate: WorkoutCalorieEstimationInput['exercises'] = activeDayData.exercises
+                .map(e => {
+                    const exerciseData: any = { name: e.name, type: e.type };
+                    
+                    const duration = getNumericValue(e.actualDuration) ?? getNumericValue(e.targetDuration);
+                    const sets = getNumericValue(e.actualSets) ?? getNumericValue(e.targetSets);
+                    const reps = getNumericValue(e.actualReps) ?? getNumericValue(e.targetReps);
+                    const weight = getNumericValue(e.actualWeight) ?? getNumericValue(e.targetWeight);
 
-        const exercisesToCalculate: WorkoutCalorieEstimationInput['exercises'] = activeDayData.exercises
-            .map(e => {
-                const exerciseData: any = { name: e.name, type: e.type };
-                
-                const duration = getNumericValue(e.actualDuration) ?? getNumericValue(e.targetDuration);
-                const sets = getNumericValue(e.actualSets) ?? getNumericValue(e.targetSets);
-                const reps = getNumericValue(e.actualReps) ?? getNumericValue(e.targetReps);
-                const weight = getNumericValue(e.actualWeight) ?? getNumericValue(e.targetWeight);
+                    if (e.type !== 'strength') {
+                        if (duration) exerciseData.durationInMinutes = duration;
+                    } else {
+                        if (sets) exerciseData.sets = sets;
+                        if (reps) exerciseData.reps = reps;
+                        if (weight) exerciseData.weight = weight;
+                    }
+                    // Only return if there is some metric to calculate
+                    return (exerciseData.durationInMinutes || (exerciseData.sets && exerciseData.reps)) ? exerciseData : null;
+                })
+                .filter((e): e is NonNullable<typeof e> => e !== null);
 
-                if (e.type !== 'strength') {
-                    if (duration) exerciseData.durationInMinutes = duration;
-                } else {
-                    if (sets) exerciseData.sets = sets;
-                    if (reps) exerciseData.reps = reps;
-                    if (weight) exerciseData.weight = weight;
+
+            let calculatedCalories = 0;
+            if (exercisesToCalculate.length > 0) {
+                try {
+                    const result: WorkoutCalorieEstimationOutput = await estimateWorkoutCalories({ exercises: exercisesToCalculate });
+                    if (result.estimatedCalories) {
+                        calculatedCalories = result.estimatedCalories;
+                    } else {
+                        console.error("Failed to calculate calories:", result);
+                    }
+                } catch (e) {
+                    console.error("Error calculating calories", e);
                 }
-                // Only return if there is some metric to calculate
-                return (exerciseData.durationInMinutes || (exerciseData.sets && exerciseData.reps)) ? exerciseData : null;
-            })
-            .filter((e): e is NonNullable<typeof e> => e !== null);
-
-
-        let calculatedCalories = 0;
-        if (exercisesToCalculate.length > 0) {
-            const result: WorkoutCalorieEstimationOutput = await estimateWorkoutCalories({ exercises: exercisesToCalculate });
-            
-            if (result.estimatedCalories) {
-                calculatedCalories = result.estimatedCalories;
-            } else {
-                console.error("Failed to calculate calories:", result);
             }
-        }
-        
-        setCaloriesResult(calculatedCalories);
-        setIsLoading(false);
-        setIsResultDialogOpen(true);
+
+            try {
+                const cooldownResult: CooldownState = await getCooldownAction();
+                if (cooldownResult.data) {
+                    setCooldownContent(cooldownResult.data);
+                }
+            } catch(e) {
+                 console.error("Error fetching cooldown content", e);
+            }
+
+            
+            setCaloriesResult(calculatedCalories);
+            setIsResultDialogOpen(true);
+        });
     };
 
     const handleConfirmAndProceed = () => {
@@ -601,6 +616,7 @@ function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset, onRes
         // Move to next day
         onProgressChange({ ...progress, currentDay: currentDay + 1 });
         setCaloriesResult(null);
+        setCooldownContent(null);
         setIsResultDialogOpen(false);
     }
 
@@ -652,22 +668,57 @@ function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset, onRes
             </Card>
             
             <Dialog open={isResultDialogOpen} onOpenChange={setIsResultDialogOpen}>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
-                        <DialogTitle>أحسنت! لقد أكملت تمرين اليوم!</DialogTitle>
+                        <DialogTitle>أحسنت! منطقة التهدئة</DialogTitle>
                         <DialogDescription>
-                            هذا هو تقدير السعرات الحرارية التي حرقتها في هذا التمرين.
+                            لقد أكملت تمرين اليوم بنجاح. خذ لحظة للراحة واستعادة النشاط.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="flex items-center justify-center gap-4 py-8">
-                        <Flame className="h-16 w-16 text-primary" />
-                        <div>
-                            <p className="text-muted-foreground">السعرات الحرارية المحروقة</p>
-                            <p className="text-5xl font-bold font-mono text-primary">{caloriesResult ?? 0}</p>
+                    <div className="space-y-6 py-4 text-center">
+                        
+                        <div className="flex items-center justify-center gap-4 py-4 bg-secondary rounded-lg">
+                            <Flame className="h-12 w-12 text-primary" />
+                            <div>
+                                <p className="text-muted-foreground">السعرات الحرارية المحروقة</p>
+                                <p className="text-4xl font-bold font-mono text-primary">{caloriesResult ?? 0}</p>
+                            </div>
                         </div>
+
+                        <div className='text-center space-y-2'>
+                             <h3 className="font-semibold text-lg">تمرين التنفس</h3>
+                             <p className='text-sm text-muted-foreground'>استرخِ وتنفس بعمق لمدة دقيقة.</p>
+                             <Image src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM2FtcWIzZGt3b2d1cmV2aHVwZ3ZpM2R1dG1oazVzYjV1aGcyajVtZSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/L1FJH5e31hN4tT3t4A/giphy.gif" alt="Breathing exercise animation" width={150} height={150} className="mx-auto rounded-full" unoptimized/>
+                        </div>
+
+
+                        {cooldownContent ? (
+                            <div className='space-y-4'>
+                                <div className="p-4 bg-secondary/50 rounded-lg flex items-start gap-4 text-right">
+                                    <Lightbulb className="h-6 w-6 text-yellow-500 mt-1" />
+                                    <div>
+                                        <h4 className="font-bold">نصيحة غذائية</h4>
+                                        <p className="text-muted-foreground text-sm">{cooldownContent.nutritionalTip}</p>
+                                    </div>
+                                </div>
+                                <div className="p-4 bg-secondary/50 rounded-lg flex items-start gap-4 text-right">
+                                     <BookOpen className="h-6 w-6 text-blue-500 mt-1" />
+                                     <div>
+                                        <h4 className="font-bold">مقولة تحفيزية</h4>
+                                        <p className="text-muted-foreground text-sm">{cooldownContent.motivationalQuote}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                           <div className='space-y-4'>
+                             <Skeleton className="h-20 w-full" />
+                             <Skeleton className="h-20 w-full" />
+                           </div>
+                        )}
+                        
                     </div>
                     <DialogFooter>
-                        <Button type="button" className="w-full" onClick={handleConfirmAndProceed}>
+                        <Button type="button" className="w-full" onClick={handleConfirmAndProceed} disabled={isLoading}>
                              رائع! انتقل لليوم التالي
                         </Button>
                     </DialogFooter>
