@@ -29,7 +29,11 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '2mb',
       serverActionsBodySizeLimit: '2mb',
     },
-    serverActionsTimeout: 120
+    serverActionsTimeout: 120,
+    allowedDevOrigins: [
+        "https://*.cloudworkstations.dev",
+        "https://*.firebase.studio"
+    ]
   },
 };
 
