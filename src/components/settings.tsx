@@ -7,11 +7,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Save, User, Weight, Target, Footprints, Flame, Wand2, Loader2, PersonStanding, Cake, Activity } from 'lucide-react';
+import { Save, User, Weight, Target, Footprints, Flame, Wand2, Loader2, PersonStanding, Cake, Activity, AlertTriangle, Trash2 } from 'lucide-react';
 import { Progress } from './ui/progress';
 import { getGoalSuggestionAction, SuggestionState } from '@/app/actions';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { debounce } from 'lodash';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Separator } from './ui/separator';
+
 
 interface UserSettings {
     name: string;
@@ -99,6 +102,25 @@ export function Settings() {
             description: "تم تحديث إعداداتك.",
         });
     };
+
+    const handleResetApp = () => {
+        try {
+            localStorage.clear();
+            toast({
+                title: "تمت إعادة ضبط التطبيق!",
+                description: "تم حذف جميع البيانات. سيتم تحديث الصفحة.",
+            });
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } catch (error) {
+             toast({
+                variant: "destructive",
+                title: "خطأ",
+                description: "فشلت عملية إعادة الضبط.",
+            });
+        }
+    }
     
     if (!isClient) {
         return null;
@@ -109,128 +131,166 @@ export function Settings() {
 
     return (
         <div className="grid gap-6 lg:grid-cols-3">
-            <Card className="lg:col-span-2">
-                <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
+            <div className="lg:col-span-2 space-y-6">
+                <Card>
+                    <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
+                        <CardHeader>
+                            <CardTitle className="font-headline text-2xl tracking-tight">الإعدادات الشخصية</CardTitle>
+                            <CardDescription>قم بتخصيص ملفك الشخصي وأهدافك. سيقوم الذكاء الاصطناعي باقتراح أهداف لك تلقائيًا عند تغيير بياناتك.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="name" className='flex items-center gap-2'><User className='h-4 w-4'/> اسم المستخدم</Label>
+                                <Input
+                                    id="name"
+                                    value={settings.name}
+                                    onChange={(e) => handleInputChange('name', e.target.value)}
+                                    placeholder="اكتب اسمك هنا"
+                                />
+                            </div>
+                            
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                               <div className="space-y-2">
+                                    <Label htmlFor="weight" className='flex items-center gap-2'><Weight className='h-4 w-4'/> وزنك (كغ)</Label>
+                                    <Input
+                                        id="weight"
+                                        type="number"
+                                        value={settings.weight}
+                                        onChange={(e) => handleInputChange('weight', e.target.value)}
+                                        placeholder="مثال: 75"
+                                    />
+                                </div>
+                                 <div className="space-y-2">
+                                    <Label htmlFor="height" className='flex items-center gap-2'><PersonStanding className='h-4 w-4'/> طولك (سم)</Label>
+                                    <Input
+                                        id="height"
+                                        type="number"
+                                        value={settings.height}
+                                        onChange={(e) => handleInputChange('height', e.target.value)}
+                                        placeholder="مثال: 180"
+                                    />
+                                </div>
+                                 <div className="space-y-2">
+                                    <Label htmlFor="age" className='flex items-center gap-2'><Cake className='h-4 w-4'/> عمرك</Label>
+                                    <Input
+                                        id="age"
+                                        type="number"
+                                        value={settings.age}
+                                        onChange={(e) => handleInputChange('age', e.target.value)}
+                                        placeholder="مثال: 28"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                 <Label className='flex items-center gap-2'><Activity className='h-4 w-4'/> جنسك</Label>
+                                 <RadioGroup
+                                    value={settings.gender}
+                                    onValueChange={(value) => handleInputChange('gender', value as UserSettings['gender'])}
+                                    className="flex gap-4"
+                                  >
+                                    <div className="flex items-center space-x-2">
+                                      <RadioGroupItem value="male" id="male" />
+                                      <Label htmlFor="male">ذكر</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <RadioGroupItem value="female" id="female" />
+                                      <Label htmlFor="female">أنثى</Label>
+                                    </div>
+                                  </RadioGroup>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="main-goal" className='flex items-center gap-2'><Target className='h-4 w-4'/> هدفك الأساسي</Label>
+                                <Select value={settings.mainGoal} onValueChange={(value) => handleInputChange('mainGoal', value as UserSettings['mainGoal'])}>
+                                    <SelectTrigger id="main-goal">
+                                        <SelectValue placeholder="اختر هدفك..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="lose_weight">خسارة الوزن</SelectItem>
+                                        <SelectItem value="gain_muscle">بناء العضلات</SelectItem>
+                                        <SelectItem value="maintain">الحفاظ على الوزن</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            
+                            <div className="relative pt-4">
+                                <div className="absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2 bg-background px-2 text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                                    {isSuggesting ? <Loader2 className="h-4 w-4 animate-spin"/> : <Wand2 className="h-4 w-4" />}
+                                    أهداف مقترحة بالذكاء الاصطناعي
+                                </div>
+                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border p-4 rounded-md">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="weekly-calories" className='flex items-center gap-2'><Flame className='h-4 w-4'/> هدف السعرات الحرارية الأسبوعي</Label>
+                                        <Input
+                                            id="weekly-calories"
+                                            type="number"
+                                            value={settings.weeklyCalorieTarget}
+                                            onChange={(e) => setSettings(prev => ({...prev, weeklyCalorieTarget: e.target.value}))}
+                                            placeholder="مثال: 14000"
+                                            disabled={isSuggesting}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="daily-steps" className='flex items-center gap-2'><Footprints className='h-4 w-4'/> هدف الخطوات اليومي</Label>
+                                        <Input
+                                            id="daily-steps"
+                                            type="number"
+                                            value={settings.dailyStepTarget}
+                                            onChange={(e) => setSettings(prev => ({...prev, dailyStepTarget: e.target.value}))}
+                                            placeholder="مثال: 8000"
+                                            disabled={isSuggesting}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                        </CardContent>
+                        <CardFooter>
+                            <Button type="submit" className="w-full sm:w-auto" disabled={isSuggesting}>
+                                <Save className="ml-2 h-4 w-4" />
+                                حفظ الإعدادات
+                            </Button>
+                        </CardFooter>
+                    </form>
+                </Card>
+
+                 <Card className="border-destructive/50">
                     <CardHeader>
-                        <CardTitle className="font-headline text-2xl tracking-tight">الإعدادات</CardTitle>
-                        <CardDescription>قم بتخصيص ملفك الشخصي وأهدافك. سيقوم الذكاء الاصطناعي باقتراح أهداف لك تلقائيًا عند تغيير بياناتك.</CardDescription>
+                        <CardTitle className="font-headline text-xl tracking-tight text-destructive flex items-center gap-2">
+                            <AlertTriangle className="h-5 w-5" />
+                            منطقة الخطر
+                        </CardTitle>
+                        <CardDescription>
+                            هذه الإجراءات لا يمكن التراجع عنها. يرجى توخي الحذر.
+                        </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-6">
-                        <div className="space-y-2">
-                            <Label htmlFor="name" className='flex items-center gap-2'><User className='h-4 w-4'/> اسم المستخدم</Label>
-                            <Input
-                                id="name"
-                                value={settings.name}
-                                onChange={(e) => handleInputChange('name', e.target.value)}
-                                placeholder="اكتب اسمك هنا"
-                            />
-                        </div>
-                        
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                           <div className="space-y-2">
-                                <Label htmlFor="weight" className='flex items-center gap-2'><Weight className='h-4 w-4'/> وزنك (كغ)</Label>
-                                <Input
-                                    id="weight"
-                                    type="number"
-                                    value={settings.weight}
-                                    onChange={(e) => handleInputChange('weight', e.target.value)}
-                                    placeholder="مثال: 75"
-                                />
-                            </div>
-                             <div className="space-y-2">
-                                <Label htmlFor="height" className='flex items-center gap-2'><PersonStanding className='h-4 w-4'/> طولك (سم)</Label>
-                                <Input
-                                    id="height"
-                                    type="number"
-                                    value={settings.height}
-                                    onChange={(e) => handleInputChange('height', e.target.value)}
-                                    placeholder="مثال: 180"
-                                />
-                            </div>
-                             <div className="space-y-2">
-                                <Label htmlFor="age" className='flex items-center gap-2'><Cake className='h-4 w-4'/> عمرك</Label>
-                                <Input
-                                    id="age"
-                                    type="number"
-                                    value={settings.age}
-                                    onChange={(e) => handleInputChange('age', e.target.value)}
-                                    placeholder="مثال: 28"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-3">
-                             <Label className='flex items-center gap-2'><Activity className='h-4 w-4'/> جنسك</Label>
-                             <RadioGroup
-                                value={settings.gender}
-                                onValueChange={(value) => handleInputChange('gender', value as UserSettings['gender'])}
-                                className="flex gap-4"
-                              >
-                                <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="male" id="male" />
-                                  <Label htmlFor="male">ذكر</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="female" id="female" />
-                                  <Label htmlFor="female">أنثى</Label>
-                                </div>
-                              </RadioGroup>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="main-goal" className='flex items-center gap-2'><Target className='h-4 w-4'/> هدفك الأساسي</Label>
-                            <Select value={settings.mainGoal} onValueChange={(value) => handleInputChange('mainGoal', value as UserSettings['mainGoal'])}>
-                                <SelectTrigger id="main-goal">
-                                    <SelectValue placeholder="اختر هدفك..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="lose_weight">خسارة الوزن</SelectItem>
-                                    <SelectItem value="gain_muscle">بناء العضلات</SelectItem>
-                                    <SelectItem value="maintain">الحفاظ على الوزن</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        
-                        <div className="relative pt-4">
-                            <div className="absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2 bg-background px-2 text-sm font-semibold text-muted-foreground flex items-center gap-2">
-                                {isSuggesting ? <Loader2 className="h-4 w-4 animate-spin"/> : <Wand2 className="h-4 w-4" />}
-                                أهداف مقترحة بالذكاء الاصطناعي
-                            </div>
-                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border p-4 rounded-md">
-                                <div className="space-y-2">
-                                    <Label htmlFor="weekly-calories" className='flex items-center gap-2'><Flame className='h-4 w-4'/> هدف السعرات الحرارية الأسبوعي</Label>
-                                    <Input
-                                        id="weekly-calories"
-                                        type="number"
-                                        value={settings.weeklyCalorieTarget}
-                                        onChange={(e) => setSettings(prev => ({...prev, weeklyCalorieTarget: e.target.value}))}
-                                        placeholder="مثال: 14000"
-                                        disabled={isSuggesting}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="daily-steps" className='flex items-center gap-2'><Footprints className='h-4 w-4'/> هدف الخطوات اليومي</Label>
-                                    <Input
-                                        id="daily-steps"
-                                        type="number"
-                                        value={settings.dailyStepTarget}
-                                        onChange={(e) => setSettings(prev => ({...prev, dailyStepTarget: e.target.value}))}
-                                        placeholder="مثال: 8000"
-                                        disabled={isSuggesting}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
+                    <CardContent>
+                         <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                 <Button variant="destructive" className="w-full sm:w-auto">
+                                    <Trash2 className="ml-2 h-4 w-4" />
+                                    إعادة ضبط البرنامج بالكامل
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                <AlertDialogTitle>هل أنت متأكد تمامًا؟</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    سيؤدي هذا الإجراء إلى حذف جميع بياناتك نهائيًا، بما في ذلك الإعدادات، تقدم التمارين، سجلات الطعام، صور رحلتك، والإنجازات. لا يمكن التراجع عن هذا الإجراء.
+                                </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleResetApp} className="bg-destructive hover:bg-destructive/90">
+                                    نعم، قم بحذف كل شيء
+                                </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     </CardContent>
-                    <CardFooter>
-                        <Button type="submit" className="w-full sm:w-auto" disabled={isSuggesting}>
-                            <Save className="ml-2 h-4 w-4" />
-                            حفظ الإعدادات
-                        </Button>
-                    </CardFooter>
-                </form>
-            </Card>
+                </Card>
+            </div>
 
             <div className="lg:col-span-1 space-y-6">
                 <Card>
