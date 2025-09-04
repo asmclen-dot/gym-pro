@@ -85,13 +85,17 @@ export function ReportsGenerator({ className }: React.HTMLAttributes<"div">) {
                 const parsedData = JSON.parse(storedData);
                 const foodCalories = parsedData.foods?.reduce((acc: number, food: any) => acc + (food.calories || 0), 0) || 0;
                 const workoutCalories = parsedData.workoutCalories || 0;
-                dailyData[dateString] = { calories: foodCalories - workoutCalories };
+                const steps = parsedData.steps || 0;
+                dailyData[dateString] = { 
+                    calories: foodCalories - workoutCalories,
+                    steps: steps
+                };
             } else {
-                dailyData[dateString] = { calories: 0 };
+                dailyData[dateString] = { calories: 0, steps: 0 };
             }
         } catch (error) {
             console.error(`Failed to parse data for ${dateString}:`, error);
-            dailyData[dateString] = { calories: 0 };
+            dailyData[dateString] = { calories: 0, steps: 0 };
         }
     });
 

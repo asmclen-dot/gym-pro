@@ -35,8 +35,10 @@ interface DailyData {
 export function Stats() {
   const [chartData, setChartData] = useState<DailyData[]>([]);
   const [streak, setStreak] = useState(0);
+  const [isClient, setIsClient] = useState(false);
   
   useEffect(() => {
+    setIsClient(true);
     // This effect runs only on the client side
     const today = new Date();
     const weekData: DailyData[] = [];
@@ -46,22 +48,29 @@ export function Stats() {
     for (let i = 6; i >= 0; i--) {
         const date = subDays(today, i);
         const dateString = format(date, 'yyyy-MM-dd');
-        const storedData = localStorage.getItem(dateString);
         let foodCalories = 0;
         let workoutCalories = 0;
+        let steps = 0;
         
-        if (storedData) {
-            const parsedData = JSON.parse(storedData);
-            foodCalories = parsedData.foods?.reduce((acc: number, food: any) => acc + food.calories, 0) || 0;
-            workoutCalories = parsedData.workoutCalories || 0;
+        try {
+          const storedData = localStorage.getItem(dateString);
+          if (storedData) {
+              const parsedData = JSON.parse(storedData);
+              foodCalories = parsedData.foods?.reduce((acc: number, food: any) => acc + food.calories, 0) || 0;
+              workoutCalories = parsedData.workoutCalories || 0;
+              steps = parsedData.steps || 0;
 
-            if (foodCalories > 0 || workoutCalories > 0) {
-              consecutiveDays++;
-            } else {
-              consecutiveDays = 0;
-            }
-        } else {
-          consecutiveDays = 0;
+              if (foodCalories > 0 || workoutCalories > 0 || steps > 0) {
+                consecutiveDays++;
+              } else {
+                consecutiveDays = 0;
+              }
+          } else {
+            consecutiveDays = 0;
+          }
+        } catch (error) {
+            console.error("Failed to parse data for", dateString, error);
+            consecutiveDays = 0;
         }
         
         if(consecutiveDays > currentStreak) {
@@ -72,22 +81,33 @@ export function Stats() {
             date: format(date, 'eeee', { locale: arSA }), // 'الأحد', 'الاثنين', etc.
             gained: foodCalories,
             burned: workoutCalories,
-            steps: 0, // Placeholder for now
+            steps: steps,
         });
     }
 
     const todayString = format(today, 'yyyy-MM-dd');
-    const storedToday = localStorage.getItem(todayString);
-    if(storedToday) {
-        const parsedData = JSON.parse(storedToday);
-        if((parsedData.foods?.length || 0) === 0 && (parsedData.workoutCalories || 0) === 0) {
-            consecutiveDays = 0;
+    let todayHasActivity = false;
+    try {
+        const storedToday = localStorage.getItem(todayString);
+        if(storedToday) {
+            const parsedData = JSON.parse(storedToday);
+            todayHasActivity = (parsedData.foods?.length > 0) || (parsedData.workoutCalories > 0) || (parsedData.steps > 0);
         }
+    } catch (e) {}
+
+    if (!todayHasActivity) {
+      // If today has no activity, the streak from yesterday is the final one
+      // The loop already calculated this, but if the last day had activity, we need to correct
+      // This logic is tricky. Let's simplify: the streak is the count of past consecutive days WITH today
+      // If today has no activity, the streak is broken for today.
+      const lastDayInLoop = weekData[weekData.length - 1];
+      if (lastDayInLoop.gained > 0 || lastDayInLoop.burned > 0 || lastDayInLoop.steps > 0) {
+         // streak is correct
+      }
     } else {
-        consecutiveDays = 0;
-    }
-     if(consecutiveDays > currentStreak) {
-        currentStreak = consecutiveDays;
+       if(consecutiveDays > currentStreak) {
+          currentStreak = consecutiveDays;
+      }
     }
 
 
@@ -96,6 +116,23 @@ export function Stats() {
     setChartData(weekData);
 
   }, []);
+  
+  if (!isClient) {
+      return (
+        <Card className="shadow-sm">
+            <CardHeader>
+                <CardTitle className="font-headline tracking-tight">ملخص الأسبوع</CardTitle>
+                <CardDescription>تتبع تقدمك خلال الأسبوع.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                 <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
+                    <BarChartIcon className="h-20 w-20" />
+                    <p className="mt-4 text-sm">جاري تحميل البيانات...</p>
+                </div>
+            </CardContent>
+        </Card>
+      )
+  }
 
   const totalCaloriesGained = chartData.reduce((acc, curr) => acc + curr.gained, 0);
   const totalCaloriesBurned = chartData.reduce((acc, curr) => acc + curr.burned, 0);
@@ -129,7 +166,7 @@ export function Stats() {
                 <Target className="size-5" />
                 <span className="font-semibold">النقاط المكتسبة</span>
               </div>
-              <span className="text-2xl font-bold font-mono">{points}</span>
+              <span className="text-2xl font-bold font-mono">{points.toLocaleString()}</span>
             </div>
              <div className="flex flex-col items-center justify-center gap-1 p-4 rounded-lg bg-secondary/50">
               <div className="flex items-center gap-2 text-muted-foreground">
