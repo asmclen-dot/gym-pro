@@ -23,10 +23,12 @@ export type ExerciseDetail = z.infer<typeof ExerciseDetailSchema>;
 
 
 const WorkoutCalorieEstimationInputSchema = z.object({
-  exerciseName: z.string().optional().describe("The name of the exercise, e.g., 'Running', 'Weightlifting'."),
+  name: z.string().optional().describe("The name of the exercise, e.g., 'Running', 'Weightlifting'."),
+  type: z.enum(['strength', 'cardio', 'flexibility']).optional().describe("The type of exercise."),
   durationInMinutes: z.number().optional().describe("The duration of the exercise in minutes."),
   sets: z.number().optional().describe("The number of sets for the exercise."),
   reps: z.number().optional().describe("The number of repetitions per set."),
+  weight: z.number().optional().describe("The weight used for the exercise in kilograms."),
   exercises: z.array(ExerciseDetailSchema).optional().describe("A list of all exercises performed in a single workout session.")
 });
 export type WorkoutCalorieEstimationInput = z.infer<typeof WorkoutCalorieEstimationInputSchema>;
@@ -63,13 +65,16 @@ Sum up the calories for all exercises to provide a single total estimate for the
 {{else}}
 This is a single exercise. Calculate the estimated calories for it.
 
-Exercise: {{{exerciseName}}}
+Exercise: {{{name}}}
 {{#if durationInMinutes}}
 Duration: {{{durationInMinutes}}} minutes
 {{/if}}
 {{#if sets}}
 Sets: {{{sets}}}
 Reps per set: {{{reps}}}
+{{/if}}
+{{#if weight}}
+Weight: {{{weight}}} kg
 {{/if}}
 {{/if}}
 

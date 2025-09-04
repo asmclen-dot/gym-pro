@@ -12,11 +12,11 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { generateAIPlanAction, AIPlanState, getCooldownAction, CooldownState } from '@/app/actions';
+import { generateAIPlanAction, AIPlanState, getCooldownAction, CooldownState, getWorkoutCaloriesAction, WorkoutState } from '@/app/actions';
 import { GenerateWorkoutPlanInput, AIWorkoutDay, AIExercise, CooldownContentOutput } from '@/app/types';
 import { format } from 'date-fns';
 import { Skeleton } from './ui/skeleton';
-import { estimateWorkoutCalories, WorkoutCalorieEstimationInput, WorkoutCalorieEstimationOutput } from '@/ai/flows/workout-calorie-estimation';
+import { WorkoutCalorieEstimationInput } from '@/ai/flows/workout-calorie-estimation';
 import Image from 'next/image';
 
 
@@ -565,9 +565,12 @@ function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset, onRes
     const handleCompleteDay = async () => {
         if (!activeDayData) return;
         startTransition(async () => {
-            const exercisesToCalculate: WorkoutCalorieEstimationInput['exercises'] = activeDayData.exercises
+            const exercisesToCalculate = activeDayData.exercises
                 .map(e => {
-                    const exerciseData: any = { name: e.name, type: e.type };
+                    const exerciseData: WorkoutCalorieEstimationInput = {
+                         name: e.name, 
+                         type: e.type,
+                    };
                     
                     const duration = getNumericValue(e.actualDuration) ?? getNumericValue(e.targetDuration);
                     const sets = getNumericValue(e.actualSets) ?? getNumericValue(e.targetSets);
@@ -581,20 +584,21 @@ function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset, onRes
                         if (reps) exerciseData.reps = reps;
                         if (weight) exerciseData.weight = weight;
                     }
-                    // Only return if there is some metric to calculate
                     return (exerciseData.durationInMinutes || (exerciseData.sets && exerciseData.reps)) ? exerciseData : null;
                 })
                 .filter((e): e is NonNullable<typeof e> => e !== null);
 
-
             let calculatedCalories = 0;
             if (exercisesToCalculate.length > 0) {
+                 const formData = new FormData();
+                 formData.append('type', 'full_day');
+                 formData.append('exercises', JSON.stringify(exercisesToCalculate));
                 try {
-                    const result: WorkoutCalorieEstimationOutput = await estimateWorkoutCalories({ exercises: exercisesToCalculate });
-                    if (result.estimatedCalories) {
-                        calculatedCalories = result.estimatedCalories;
+                    const result: WorkoutState = await getWorkoutCaloriesAction({ data: null, error: null, message: null }, formData);
+                    if (result.data?.estimatedCalories) {
+                        calculatedCalories = result.data.estimatedCalories;
                     } else {
-                        console.error("Failed to calculate calories:", result);
+                        console.error("Failed to calculate calories:", result.error);
                     }
                 } catch (e) {
                     console.error("Error calculating calories", e);
