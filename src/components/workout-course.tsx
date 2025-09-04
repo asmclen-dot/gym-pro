@@ -2,6 +2,7 @@
 
 
 
+
 "use client";
 
 import React, { useState, useMemo, useEffect, useTransition } from 'react';
@@ -21,7 +22,6 @@ import { format } from 'date-fns';
 import { Skeleton } from './ui/skeleton';
 import { estimateWorkoutCalories, WorkoutCalorieEstimationInput, WorkoutCalorieEstimationOutput } from '@/ai/flows/workout-calorie-estimation';
 import Image from 'next/image';
-import { playSound } from '@/lib/sounds';
 
 
 const exerciseList = [
@@ -439,9 +439,6 @@ function WorkoutDayDisplay({ day, onPerformanceChange, onComplete, isLoading }: 
     const allExercisesDone = day.exercises.length > 0 && day.exercises.every(ex => ex.done);
 
     const handleCheckChange = (exerciseId: string, isChecked: boolean) => {
-        if (isChecked) {
-            playSound('complete');
-        }
         onPerformanceChange(exerciseId, 'done', isChecked);
     };
 
@@ -557,7 +554,6 @@ function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset, onRes
     
     const handleCompleteDay = async () => {
         if (!activeDayData) return;
-        playSound('success');
         startTransition(async () => {
             const exercisesToCalculate: WorkoutCalorieEstimationInput['exercises'] = activeDayData.exercises
                 .map(e => {
