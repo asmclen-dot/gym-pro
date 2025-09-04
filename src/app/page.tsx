@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Dumbbell, FileText, Flame, Trophy, Camera } from 'lucide-react';
 import { WorkoutCoursePreview } from '@/components/workout-course-preview';
+import { HabitTracker } from '@/components/habit-tracker';
 
 export default function Home() {
   return (
@@ -59,6 +60,7 @@ export default function Home() {
             <div className="lg:col-span-1 space-y-6 lg:space-y-8">
               <UserProfile />
               <RecipeGenerator />
+              <HabitTracker />
             </div>
           </div>
         </div>
