@@ -1,6 +1,6 @@
 "use client"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Flame, Footprints, Target, Zap, BarChart as BarChartIcon } from 'lucide-react';
+import { Flame, Footprints, Target, Zap, BarChart as BarChartIcon, Utensils } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
@@ -10,9 +10,13 @@ import { arSA } from 'date-fns/locale';
 
 
 const chartConfig = {
-  calories: {
-    label: "السعرات",
+  gained: {
+    label: "المكتسبة",
     color: "hsl(var(--primary))",
+  },
+  burned: {
+    label: "المحروقة",
+    color: "hsl(var(--destructive))",
   },
   steps: {
     label: "الخطوات",
@@ -22,7 +26,8 @@ const chartConfig = {
 
 interface DailyData {
     date: string;
-    calories: number;
+    gained: number; // Calories gained from food
+    burned: number; // Calories burned from workout
     steps: number;
 }
 
@@ -42,13 +47,13 @@ export function Stats() {
         const date = subDays(today, i);
         const dateString = format(date, 'yyyy-MM-dd');
         const storedData = localStorage.getItem(dateString);
-        let netCalories = 0;
+        let foodCalories = 0;
+        let workoutCalories = 0;
         
         if (storedData) {
             const parsedData = JSON.parse(storedData);
-            const foodCalories = parsedData.foods?.reduce((acc: number, food: any) => acc + food.calories, 0) || 0;
-            const workoutCalories = parsedData.workoutCalories || 0;
-            netCalories = foodCalories - workoutCalories;
+            foodCalories = parsedData.foods?.reduce((acc: number, food: any) => acc + food.calories, 0) || 0;
+            workoutCalories = parsedData.workoutCalories || 0;
 
             if (foodCalories > 0 || workoutCalories > 0) {
               consecutiveDays++;
@@ -65,7 +70,8 @@ export function Stats() {
 
         weekData.push({
             date: format(date, 'eeee', { locale: arSA }), // 'الأحد', 'الاثنين', etc.
-            calories: netCalories,
+            gained: foodCalories,
+            burned: workoutCalories,
             steps: 0, // Placeholder for now
         });
     }
@@ -91,9 +97,10 @@ export function Stats() {
 
   }, []);
 
-  const totalCalories = chartData.reduce((acc, curr) => acc + curr.calories, 0);
+  const totalCaloriesGained = chartData.reduce((acc, curr) => acc + curr.gained, 0);
+  const totalCaloriesBurned = chartData.reduce((acc, curr) => acc + curr.burned, 0);
   const totalSteps = chartData.reduce((acc, curr) => acc + curr.steps, 0);
-  const points = Math.floor(totalCalories / 10 + totalSteps / 100);
+  const points = Math.floor((totalCaloriesBurned) / 10 + totalSteps / 100);
 
   return (
     <Card className="shadow-sm">
@@ -105,17 +112,17 @@ export function Stats() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 text-center">
             <div className="flex flex-col items-center justify-center gap-1 p-4 rounded-lg bg-secondary/50">
               <div className="flex items-center gap-2 text-muted-foreground">
-                <Flame className="size-5" />
-                <span className="font-semibold">صافي السعرات</span>
+                <Utensils className="size-5 text-primary" />
+                <span className="font-semibold">السعرات المكتسبة</span>
               </div>
-              <span className="text-2xl font-bold font-mono">{totalCalories.toLocaleString()}</span>
+              <span className="text-2xl font-bold font-mono">{totalCaloriesGained.toLocaleString()}</span>
             </div>
              <div className="flex flex-col items-center justify-center gap-1 p-4 rounded-lg bg-secondary/50">
               <div className="flex items-center gap-2 text-muted-foreground">
-                <Footprints className="size-5" />
-                <span className="font-semibold">مجموع الخطوات</span>
+                <Flame className="size-5 text-destructive" />
+                <span className="font-semibold">السعرات المحروقة</span>
               </div>
-              <span className="text-2xl font-bold font-mono">{totalSteps.toLocaleString()}</span>
+              <span className="text-2xl font-bold font-mono">{totalCaloriesBurned.toLocaleString()}</span>
             </div>
              <div className="flex flex-col items-center justify-center gap-1 p-4 rounded-lg bg-secondary/50">
               <div className="flex items-center gap-2 text-muted-foreground">
@@ -155,7 +162,8 @@ export function Stats() {
                       cursor={false}
                       content={<ChartTooltipContent indicator="dot" />}
                     />
-                    <Bar dataKey="calories" fill="var(--color-calories)" radius={4} />
+                    <Bar dataKey="gained" fill="var(--color-gained)" radius={4} />
+                    <Bar dataKey="burned" fill="var(--color-burned)" radius={4} />
                   </BarChart>
                 </ChartContainer>
               </div>
