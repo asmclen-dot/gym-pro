@@ -1,6 +1,7 @@
 
 
 
+
 "use client";
 
 import React, { useState, useMemo, useEffect, useTransition } from 'react';
@@ -20,6 +21,7 @@ import { format } from 'date-fns';
 import { Skeleton } from './ui/skeleton';
 import { estimateWorkoutCalories, WorkoutCalorieEstimationInput, WorkoutCalorieEstimationOutput } from '@/ai/flows/workout-calorie-estimation';
 import Image from 'next/image';
+import { playSound } from '@/lib/sounds';
 
 
 const exerciseList = [
@@ -436,6 +438,13 @@ function WorkoutPlanSetup({ config, existingPlan, onSave, onCancel }: { config: 
 function WorkoutDayDisplay({ day, onPerformanceChange, onComplete, isLoading }: { day: WorkoutDay, onPerformanceChange: (exerciseId: string, field: keyof Exercise, value: string | number | boolean) => void, onComplete: () => void, isLoading: boolean }) {
     const allExercisesDone = day.exercises.length > 0 && day.exercises.every(ex => ex.done);
 
+    const handleCheckChange = (exerciseId: string, isChecked: boolean) => {
+        if (isChecked) {
+            playSound('complete');
+        }
+        onPerformanceChange(exerciseId, 'done', isChecked);
+    };
+
     return (
         <CardContent className="space-y-4 pt-4">
             {day.targetTime && <div className='text-sm font-semibold text-muted-foreground bg-muted px-2 py-1 rounded-md max-w-fit'>{day.targetTime === 'morning' ? 'صباحًا' : day.targetTime === 'afternoon' ? 'ظهرًا' : 'مساءً'}</div>}
@@ -469,7 +478,7 @@ function WorkoutDayDisplay({ day, onPerformanceChange, onComplete, isLoading }: 
                                     <Label htmlFor={`ex-done-${ex.id}`} className='cursor-pointer text-sm font-semibold'>تم</Label>
                                     <input type='checkbox' id={`ex-done-${ex.id}`} className='h-5 w-5 accent-primary' 
                                       checked={!!ex.done}
-                                      onChange={(e) => onPerformanceChange(ex.id, 'done', e.target.checked)}
+                                      onChange={(e) => handleCheckChange(ex.id, e.target.checked)}
                                     />
                                 </div>
                             </div>
@@ -548,6 +557,7 @@ function WorkoutPlanDisplay({ progress, onProgressChange, onEdit, onReset, onRes
     
     const handleCompleteDay = async () => {
         if (!activeDayData) return;
+        playSound('success');
         startTransition(async () => {
             const exercisesToCalculate: WorkoutCalorieEstimationInput['exercises'] = activeDayData.exercises
                 .map(e => {
