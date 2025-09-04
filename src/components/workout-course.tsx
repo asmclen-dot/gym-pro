@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -781,5 +782,3 @@ export function WorkoutCourse() {
 
     return <CourseRegistration onCourseCreate={setCourseConfig} />;
 }
-
-    
